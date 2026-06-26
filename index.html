@@ -42,15 +42,16 @@ nav {
   position: fixed; top: 0; left: 0; right: 0;
   z-index: 200;
   display: flex; align-items: center; justify-content: space-between;
-  padding: 32px 56px;
-  mix-blend-mode: normal;
+  padding: 24px 56px;
+  background: rgba(8,8,8,0);
+  transition: background .4s, padding .4s;
 }
-nav::before {
-  content: '';
-  position: absolute; inset: 0;
-  background: linear-gradient(to bottom, rgba(8,8,8,.9) 0%, transparent 100%);
-  pointer-events: none;
+nav.scrolled {
+  background: rgba(8,8,8,.97);
+  padding: 18px 56px;
+  border-bottom: 1px solid var(--border);
 }
+nav::before { display: none; }
 .nav-logo {
   font-family: var(--display);
   font-size: 20px;
@@ -236,10 +237,27 @@ nav::before {
   color: transparent;
 }
 
-.slider-outer { overflow: hidden; position: relative; }
+.slider-outer { overflow: visible; position: relative; }
+
+.slider-arrow {
+  position: absolute; top: 42%; z-index: 10;
+  transform: translateY(-50%);
+  width: 40px; height: 40px;
+  border: 1px solid rgba(0,128,129,.4);
+  background: rgba(8,8,8,.85);
+  color: var(--accent);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: border-color .2s, background .2s, box-shadow .2s;
+  backdrop-filter: blur(6px);
+}
+.slider-arrow:hover { border-color: var(--accent); background: rgba(0,128,129,.15); box-shadow: 0 0 12px rgba(0,128,129,.3); }
+.slider-arrow svg { width: 16px; height: 16px; }
+.slider-arrow.prev { left: 8px; }
+.slider-arrow.next { right: 8px; }
 .slider-track {
   display: flex; gap: 16px;
-  padding: 16px 56px 24px;
+  padding: 16px 64px 24px;
   cursor: default;
   user-select: none;
   will-change: transform;
@@ -648,7 +666,13 @@ footer {
     <div class="work-count" id="wc-display">00</div>
   </div>
   <div class="slider-outer">
+    <button class="slider-arrow prev" onclick="slideBy(-1)" aria-label="Previous">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
     <div class="slider-track" id="sliderTrack"></div>
+    <button class="slider-arrow next" onclick="slideBy(1)" aria-label="Next">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
   </div>
   <p class="drag-label">← drag to explore →</p>
 </section>
@@ -869,6 +893,22 @@ function renderClients() {
       <div class="client-name">${c.name}</div>
       ${c.subs ? `<div class="client-subs">${c.subs}</div>` : ''}
     </div>`).join('');
+}
+
+/* ─── NAV SCROLL ─── */
+window.addEventListener('scroll', () => {
+  document.querySelector('nav').classList.toggle('scrolled', window.scrollY > 60);
+});
+
+/* ─── SLIDER ARROWS ─── */
+function slideBy(dir) {
+  const track = document.getElementById('sliderTrack');
+  const slideW = track.querySelector('.slide') ? track.querySelector('.slide').offsetWidth + 16 : 320;
+  const max = -(track.scrollWidth - track.clientWidth - 112);
+  track._x = Math.max(max, Math.min(0, (track._x || 0) + (-dir * slideW * 2)));
+  track.style.transition = 'transform .5s cubic-bezier(.25,.46,.45,.94)';
+  track.style.transform = `translateX(${track._x}px)`;
+  setTimeout(() => track.style.transition = '', 500);
 }
 
 /* ─── COUNTER ─── */
