@@ -718,7 +718,7 @@ const PASS      = 'vader2025';
 
 const db = {
   async get(table) {
-    const r = await fetch(`${SUPA_URL}/rest/v1/${table}?order=id.asc`, {
+    const r = await fetch(`${SUPA_URL}/rest/v1/${table}?order=id.desc`, {
       headers: { apikey: SUPA_KEY, Authorization: `Bearer ${SUPA_KEY}` }
     });
     return r.ok ? r.json() : [];
