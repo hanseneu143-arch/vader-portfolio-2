@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vader — Thumbnails that get clicked</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:       #080808;
+  --bg2:      #0f0f0f;
+  --bg3:      #161616;
+  --border:   #222;
+  --white:    #FFFFFF;
+  --off:      #E8E8E8;
+  --muted:    #666;
+  --dimmer:   #333;
+  --accent:   #008081;
+  --accent-dim: rgba(0,128,129,0.12);
+  --glow:     rgba(255,255,255,0.06);
+  --glow-strong: rgba(255,255,255,0.12);
+  --display:  'Bebas Neue', sans-serif;
+  --body:     'Inter', sans-serif;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--white);
+  font-family: var(--body);
+  overflow-x: hidden;
+  cursor: none;
+}
+
+/* ── CURSOR ── */
+#cursor-dot, #cursor-ring {
+  position: fixed;
+  pointer-events: none;
+  z-index: 9999;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+#cursor-dot {
+  width: 5px; height: 5px;
+  background: #fff;
+  transition: width .15s, height .15s, opacity .15s;
+}
+#cursor-ring {
+  width: 36px; height: 36px;
+  border: 1px solid rgba(255,255,255,0.35);
+  transition: width .3s cubic-bezier(.25,.46,.45,.94),
+              height .3s cubic-bezier(.25,.46,.45,.94),
+              border-color .3s, opacity .15s;
+}
+body.cursor-hover #cursor-ring { width: 56px; height: 56px; border-color: rgba(255,255,255,.6); }
+body.cursor-hover #cursor-dot  { width: 3px; height: 3px; opacity: .4; }
+
+/* ── NAV ── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0;
+  z-index: 200;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 32px 56px;
+  mix-blend-mode: normal;
+}
+nav::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(to bottom, rgba(8,8,8,.9) 0%, transparent 100%);
+  pointer-events: none;
+}
+.nav-logo {
+  font-family: var(--display);
+  font-size: 20px;
+  letter-spacing: .12em;
+  color: #fff;
+  text-decoration: none;
+  position: relative;
+}
+.nav-links { display: flex; gap: 40px; list-style: none; position: relative; }
+.nav-links a {
+  font-size: 11px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-decoration: none;
+  transition: color .2s;
+}
+.nav-links a:hover { color: #fff; }
+
+/* ── HERO ── */
+#home {
+  min-height: 100vh;
+  display: flex; flex-direction: column; justify-content: flex-end;
+  padding: 0 56px 96px;
+  position: relative;
+  overflow: hidden;
+}
+.hero-noise {
+  position: absolute; inset: 0; pointer-events: none; z-index: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  background-size: 200px;
+  opacity: .4;
+}
+.hero-content { position: relative; z-index: 1; }
+
+.hero-tag {
+  display: inline-block;
+  font-size: 10px;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--accent);
+  border: 1px solid rgba(0,128,129,0.35);
+  padding: 6px 14px;
+  margin-bottom: 32px;
+  opacity: 0;
+  transform: translateY(16px);
+  animation: up .7s .1s forwards;
+}
+.hero-h1 {
+  font-family: var(--display);
+  font-size: clamp(80px, 13vw, 200px);
+  line-height: .88;
+  letter-spacing: -.01em;
+  color: #fff;
+  opacity: 0;
+  transform: translateY(40px);
+  animation: up .9s .22s forwards;
+  text-shadow: none;
+}
+.hero-h1 em { font-style: normal; color: var(--accent); }
+.contact-title em { font-style: normal; color: var(--accent); }
+.hero-row {
+  margin-top: 40px;
+  display: flex; align-items: flex-end; gap: 64px;
+  opacity: 0;
+  transform: translateY(20px);
+  animation: up .8s .4s forwards;
+}
+.hero-desc {
+  max-width: 260px;
+  font-size: 13px;
+  line-height: 1.75;
+  color: var(--muted);
+}
+.hero-counter { flex-shrink: 0; }
+.counter-num {
+  font-family: var(--display);
+  font-size: clamp(44px, 6vw, 80px);
+  line-height: 1;
+  color: #fff;
+  letter-spacing: -.02em;
+  text-shadow: none;
+  animation: none;
+}
+.counter-label {
+  font-size: 10px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-top: 6px;
+}
+
+/* ── AMBIENT ORBS ── */
+.hero-orb {
+  position: absolute;
+  width: 600px; height: 600px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(0,128,129,.1) 0%, transparent 70%);
+  top: 10%; right: -80px; pointer-events: none;
+  animation: orb-drift 12s ease-in-out infinite;
+  filter: blur(48px);
+}
+.hero-orb-2 {
+  position: absolute;
+  width: 280px; height: 280px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,255,255,.035) 0%, transparent 70%);
+  bottom: 22%; left: 8%; pointer-events: none;
+  animation: orb-drift 18s ease-in-out 3s infinite reverse;
+  filter: blur(32px);
+}
+.hero-ctas {
+  margin-top: 48px;
+  display: flex; gap: 12px;
+  opacity: 0; animation: up .7s .55s forwards;
+}
+.btn {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  text-decoration: none;
+  padding: 14px 30px;
+  transition: all .25s;
+  cursor: none;
+}
+.btn-white  { background:#fff; color:#000; border:1px solid #fff; }
+.btn-white:hover { background:transparent; color:#fff; }
+.btn-outline { background:transparent; color:var(--muted); border:1px solid var(--border); }
+.btn-outline:hover { border-color:var(--dimmer); color:#fff; }
+
+.hero-scroll {
+  position: absolute; right: 56px; bottom: 96px;
+  font-size: 10px; letter-spacing: .18em; text-transform: uppercase;
+  color: var(--muted); writing-mode: vertical-rl;
+  display: flex; align-items: center; gap: 14px;
+  opacity: 0; animation: up .7s .7s forwards;
+}
+.hero-scroll::after {
+  content: ''; display: block;
+  width: 1px; height: 52px;
+  background: var(--border);
+}
+
+/* ── SECTION SHARED ── */
+.s-label {
+  font-size: 10px; letter-spacing: .22em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 14px;
+}
+.s-title {
+  font-family: var(--display);
+  font-size: clamp(44px, 7vw, 88px);
+  line-height: .95; color: #fff;
+  text-shadow: none;
+  position: relative; display: inline-block;
+}
+.s-title::after {
+  content: '';
+  position: absolute;
+  bottom: -6px; left: 0;
+  width: 100%; height: 1px;
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform .7s cubic-bezier(.22,1,.36,1) .25s;
+}
+.reveal.in .s-title::after { transform: scaleX(1); }
+.divider { width: 100%; height: 1px; background: var(--border); }
+
+/* ── WORK SLIDER ── */
+#work { padding: 120px 0 80px; }
+.work-head {
+  padding: 0 56px;
+  display: flex; align-items: flex-end; justify-content: space-between;
+  margin-bottom: 56px;
+}
+.work-count {
+  font-family: var(--display);
+  font-size: clamp(80px, 10vw, 140px);
+  color: var(--bg3); line-height: 1; user-select: none;
+  /* outlined text */
+  -webkit-text-stroke: 1px var(--border);
+  color: transparent;
+}
+
+.slider-outer { overflow: hidden; position: relative; }
+.slider-track {
+  display: flex; gap: 16px;
+  padding: 16px 56px 24px;
+  cursor: none;
+  user-select: none;
+  will-change: transform;
+}
+.slider-track.grabbing { transition: none !important; }
+
+.slide {
+  flex-shrink: 0;
+  width: clamp(240px, 30vw, 440px);
+  position: relative;
+}
+.slide-img {
+  aspect-ratio: 16/9;
+  overflow: hidden;
+  background: var(--bg3);
+  position: relative;
+  border: 1px solid var(--border);
+  /* thumbnail glow on hover */
+  transition: box-shadow .4s cubic-bezier(.25,.46,.45,.94);
+}
+.slide-img:hover {
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,.08),
+    0 0 28px 4px rgba(255,255,255,.07),
+    0 0 60px 12px rgba(255,255,255,.04);
+}
+.slide-img img {
+  width: 100%; height: 100%;
+  object-fit: cover; display: block; draggable: false;
+  filter: brightness(.88) saturate(.8);
+  transition: filter .45s, transform .55s cubic-bezier(.25,.46,.45,.94);
+}
+.slide:hover .slide-img img {
+  filter: brightness(1) saturate(1);
+  transform: scale(1.05);
+}
+.slide-shimmer {
+  position: absolute; inset: 0;
+  background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,.04) 50%, transparent 60%);
+  background-size: 200% 100%;
+  opacity: 0;
+  transition: opacity .3s;
+}
+.slide:hover .slide-shimmer { opacity: 1; animation: shimmer 1.2s linear; }
+@keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+
+.slide-meta {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: 10px; padding: 0 2px;
+}
+.slide-name { font-size: 12px; font-weight: 500; color: var(--off); }
+.slide-views { font-size: 11px; color: var(--muted); }
+
+.drag-label {
+  text-align: center; padding: 16px 0;
+  font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--dimmer);
+}
+
+/* ── CLIENTS ── */
+#clients { padding: 100px 56px; }
+.clients-head { margin-bottom: 60px; }
+
+.clients-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 24px;
+}
+.client-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  padding: 24px 16px 20px;
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+  transition: border-color .3s, background .3s;
+  position: relative; overflow: hidden;
+}
+.client-card::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(circle at 50% 0%, rgba(255,255,255,.04) 0%, transparent 60%);
+  opacity: 0; transition: opacity .4s;
+}
+.client-card:hover { border-color: var(--dimmer); background: var(--bg3); }
+.client-card:hover::after { opacity: 1; }
+
+.client-pfp {
+  width: 56px; height: 56px; border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--border);
+  background: var(--bg3);
+  display: block;
+  flex-shrink: 0;
+}
+.client-pfp-placeholder {
+  width: 56px; height: 56px; border-radius: 50%;
+  background: var(--bg3); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--display); font-size: 22px; color: var(--dimmer);
+  flex-shrink: 0;
+}
+.client-name {
+  font-size: 12px; font-weight: 500; color: var(--off);
+  text-align: center; line-height: 1.3;
+}
+.client-subs {
+  font-size: 10px; color: var(--muted); letter-spacing: .05em;
+}
+
+/* ── STATS ── */
+.stats-bar {
+  padding: 64px 56px;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  display: flex; justify-content: space-around; align-items: center;
+}
+.stat { text-align: center; }
+.stat-n {
+  font-family: var(--display);
+  font-size: clamp(36px, 5vw, 64px);
+  line-height: 1; color: #fff;
+  text-shadow: none;
+}
+.stat-l {
+  font-size: 10px; letter-spacing: .18em; text-transform: uppercase;
+  color: var(--muted); margin-top: 8px;
+}
+
+/* ── CONTACT ── */
+#contact { padding: 120px 56px; }
+.contact-title {
+  font-family: var(--display);
+  font-size: clamp(56px, 9vw, 130px);
+  line-height: .88; color: #fff; margin-bottom: 64px;
+  text-shadow: none;
+}
+.contact-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px;
+  background: var(--border);
+}
+.contact-cell {
+  background: var(--bg); padding: 40px 32px;
+  transition: background .3s;
+  text-decoration: none; display: block;
+  cursor: none;
+}
+.contact-cell:hover { background: var(--bg2); }
+.contact-platform { font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--accent); margin-bottom: 14px; }
+.contact-handle {
+  font-family: var(--display); font-size: clamp(20px, 3vw, 36px); color: #fff;
+}
+.contact-tip { font-size: 11px; color: var(--dimmer); margin-top: 10px; }
+
+/* ── CLIENT PFP GLOW ── */
+.client-pfp, .client-pfp-placeholder {
+  transition: box-shadow .35s;
+}
+.client-card:hover .client-pfp,
+.client-card:hover .client-pfp-placeholder {
+  box-shadow: 0 0 0 1px rgba(0,128,129,.5), 0 0 18px rgba(0,128,129,.25);
+}
+
+/* ── FOOTER ── */
+footer {
+  padding: 40px 56px;
+  border-top: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.f-logo { font-family: var(--display); font-size: 16px; letter-spacing: .1em; color: var(--dimmer); }
+.f-copy { font-size: 11px; color: var(--dimmer); }
+.f-admin { font-size: 11px; color: var(--bg3); text-decoration: none; cursor: none; transition: color .2s; }
+.f-admin:hover { color: var(--dimmer); }
+
+/* ── REVEAL ANIMATIONS ── */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  filter: blur(5px);
+  transition: opacity .9s cubic-bezier(.22,1,.36,1),
+              transform .9s cubic-bezier(.22,1,.36,1),
+              filter .9s cubic-bezier(.22,1,.36,1);
+}
+.reveal.in { opacity: 1; transform: none; filter: blur(0); }
+.reveal-delay-1 { transition-delay: .12s; }
+.reveal-delay-2 { transition-delay: .24s; }
+.reveal-delay-3 { transition-delay: .36s; }
+
+/* ── ADMIN OVERLAY ── */
+#admin-overlay {
+  display: none; position: fixed; inset: 0; z-index: 1000;
+  background: rgba(0,0,0,.94); overflow-y: auto;
+}
+#admin-overlay.open { display: block; }
+.admin-wrap { max-width: 660px; margin: 80px auto; padding: 0 24px 100px; }
+.admin-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 48px; }
+.admin-head { font-family: var(--display); font-size: 32px; letter-spacing: .06em; color: #fff; }
+.admin-close-btn {
+  background: none; border: 1px solid var(--border); color: var(--muted);
+  padding: 8px 20px; font-size: 10px; letter-spacing: .15em; text-transform: uppercase;
+  cursor: none; font-family: var(--body); transition: all .2s;
+}
+.admin-close-btn:hover { border-color: var(--dimmer); color: #fff; }
+
+.admin-section { margin-bottom: 48px; }
+.admin-s-label {
+  font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--accent);
+  margin-bottom: 20px;
+}
+.a-form { background: var(--bg2); border: 1px solid var(--border); padding: 28px; }
+.a-row { margin-bottom: 16px; }
+.a-row label { display: block; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: 7px; }
+.a-row input {
+  width: 100%; background: var(--bg); border: 1px solid var(--border);
+  color: #fff; padding: 11px 14px; font-size: 13px; font-family: var(--body);
+  outline: none; transition: border-color .2s;
+}
+.a-row input::placeholder { color: var(--dimmer); }
+.a-row input:focus { border-color: var(--dimmer); }
+.btn-action {
+  background: #fff; color: #000; border: none; padding: 13px 28px;
+  font-size: 11px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase;
+  cursor: none; font-family: var(--body); transition: opacity .2s; margin-top: 4px;
+}
+.btn-action:hover { opacity: .85; }
+.btn-action.danger { background: transparent; color: var(--muted); border: 1px solid var(--border); margin-top: 0; }
+.btn-action.danger:hover { border-color: #fff; color: #fff; }
+
+.a-list { display: flex; flex-direction: column; gap: 6px; }
+.a-list-item { background: var(--bg2); border: 1px solid var(--border); padding: 14px 16px; display: flex; align-items: center; gap: 14px; }
+.a-thumb { width: 56px; height: 32px; object-fit: cover; background: var(--bg3); flex-shrink: 0; }
+.a-pfp-thumb { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; background: var(--bg3); flex-shrink: 0; }
+.a-info { flex: 1; min-width: 0; }
+.a-name { font-size: 12px; font-weight: 500; color: var(--off); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.a-sub  { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.a-rm { background: none; border: 1px solid var(--border); color: var(--muted); padding: 5px 12px; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; cursor: none; font-family: var(--body); transition: all .2s; flex-shrink: 0; }
+.a-rm:hover { border-color: #fff; color: #fff; }
+
+.a-login { background: var(--bg2); border: 1px solid var(--border); padding: 48px; text-align: center; }
+.a-login p { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
+.a-login input {
+  background: var(--bg); border: 1px solid var(--border); color: #fff;
+  padding: 12px 20px; font-size: 14px; font-family: var(--body);
+  outline: none; width: 220px; text-align: center; letter-spacing: .15em;
+  transition: border-color .2s;
+}
+.a-login input:focus { border-color: var(--dimmer); }
+.a-err { font-size: 12px; color: var(--muted); margin-top: 10px; display: none; }
+
+/* ── LIGHTBOX ── */
+#lightbox { display: none; position: fixed; inset: 0; z-index: 800; background: rgba(0,0,0,.96); align-items: center; justify-content: center; }
+#lightbox.open { display: flex; }
+#lightbox img { max-width: 92vw; max-height: 92vh; object-fit: contain; }
+#lb-close { position: absolute; top: 28px; right: 28px; background: none; border: 1px solid var(--border); color: var(--muted); padding: 8px 20px; font-size: 10px; letter-spacing: .15em; text-transform: uppercase; cursor: none; font-family: var(--body); transition: all .2s; }
+#lb-close:hover { border-color: #fff; color: #fff; }
+
+/* ── KEYFRAMES ── */
+@keyframes up { to { opacity: 1; transform: none; } }
+@keyframes orb-drift {
+  0%   { transform: translate(0,0) scale(1); }
+  33%  { transform: translate(40px,-30px) scale(1.08); }
+  66%  { transform: translate(-20px,20px) scale(.95); }
+  100% { transform: translate(0,0) scale(1); }
+}
+@keyframes glow-pulse {
+  0%, 100% { text-shadow: 0 0 20px rgba(255,255,255,.18), 0 0 60px rgba(255,255,255,.06); }
+  50%       { text-shadow: 0 0 30px rgba(255,255,255,.28), 0 0 80px rgba(255,255,255,.10); }
+}
+@keyframes line-in {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+@keyframes float-up-blur {
+  from { opacity:0; transform: translateY(36px); filter: blur(6px); }
+  to   { opacity:1; transform: translateY(0);    filter: blur(0); }
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  nav, #home, #work .work-head, #clients, #contact, footer { padding-left: 24px; padding-right: 24px; }
+  .hero-scroll { display: none; }
+  .slider-track { padding: 8px 24px 16px; }
+  .stats-bar { flex-direction: column; gap: 32px; padding: 48px 24px; }
+  .contact-grid { grid-template-columns: 1fr; }
+  .clients-grid { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); }
+  .work-head { flex-direction: column; align-items: flex-start; gap: 8px; }
+}
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+</style>
+</head>
+<body>
+
+<!-- CURSOR -->
+<div id="cursor-dot"></div>
+<div id="cursor-ring"></div>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-logo" href="#home">VADER</a>
+  <ul class="nav-links">
+    <li><a href="#work">Work</a></li>
+    <li><a href="#clients">Clients</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section id="home">
+  <div class="hero-noise"></div>
+  <div class="hero-orb"></div>
+  <div class="hero-orb-2"></div>
+  <div class="hero-content">
+    <div class="hero-tag">YouTube Thumbnail Studio</div>
+    <h1 class="hero-h1">Thumbnails<br>that<br><em>get clicked.</em></h1>
+    <div class="hero-row">
+      <p class="hero-desc">High-CTR thumbnails that stop the scroll. Simple process. Fast delivery. Results that speak.</p>
+      <div class="hero-counter">
+        <div class="counter-num"><span id="c-num">0</span>B+</div>
+        <div class="counter-label">Views Generated</div>
+      </div>
+    </div>
+    <div class="hero-ctas">
+      <a href="#work" class="btn btn-white">See Work</a>
+      <a href="#contact" class="btn btn-outline">Get in Touch</a>
+    </div>
+  </div>
+  <div class="hero-scroll">Scroll</div>
+</section>
+
+<!-- WORK SLIDER -->
+<section id="work">
+  <div class="work-head reveal">
+    <div>
+      <p class="s-label">Selected Work</p>
+      <h2 class="s-title">Recent<br>Thumbnails</h2>
+    </div>
+    <div class="work-count" id="wc-display">00</div>
+  </div>
+  <div class="slider-outer">
+    <div class="slider-track" id="sliderTrack"></div>
+  </div>
+  <p class="drag-label">← drag to explore →</p>
+</section>
+
+<!-- CLIENTS -->
+<section id="clients">
+  <div class="divider" style="margin-bottom:100px"></div>
+  <div class="clients-head reveal">
+    <p class="s-label">Creators</p>
+    <h2 class="s-title">Clients</h2>
+  </div>
+  <div class="clients-grid" id="clientsGrid"></div>
+</section>
+
+<!-- STATS -->
+<div class="stats-bar reveal" style="margin-top:100px">
+  <div class="stat"><div class="stat-n">1B+</div><div class="stat-l">Views Generated</div></div>
+  <div class="stat"><div class="stat-n">1000+</div><div class="stat-l">Thumbnails Created</div></div>
+  <div class="stat"><div class="stat-n">48hr</div><div class="stat-l">Avg Turnaround</div></div>
+</div>
+
+<!-- CONTACT -->
+<section id="contact">
+  <h2 class="contact-title reveal">Let's<br>make it<br><em>click.</em></h2>
+  <div class="contact-grid reveal reveal-delay-1">
+    <div class="contact-cell" onclick="copyIt('vaderzs', this, '.contact-tip')">
+      <div class="contact-platform">Discord</div>
+      <div class="contact-handle">vaderzs</div>
+      <div class="contact-tip">Click to copy</div>
+    </div>
+    <div class="contact-cell" onclick="copyIt('hello@vader.studio', this, '.contact-tip')">
+      <div class="contact-platform">Email</div>
+      <div class="contact-handle" style="font-size:clamp(16px,2.4vw,28px)">hello@vader.studio</div>
+      <div class="contact-tip">Click to copy</div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="f-logo">VADER</div>
+  <div class="f-copy">© 2026 Vader Studio</div>
+  <a class="f-admin" onclick="openAdmin()">admin</a>
+</footer>
+
+<!-- LIGHTBOX -->
+<div id="lightbox">
+  <button id="lb-close" onclick="closeLB()">Close</button>
+  <img id="lb-img" src="" alt="">
+</div>
+
+<!-- ADMIN -->
+<div id="admin-overlay">
+  <div class="admin-wrap">
+    <div class="admin-top">
+      <div class="admin-head">ADMIN</div>
+      <button class="admin-close-btn" onclick="closeAdmin()">× Close</button>
+    </div>
+
+    <!-- Login -->
+    <div id="a-login">
+      <div class="a-login">
+        <p>Enter password to manage content</p>
+        <input type="password" id="a-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')tryLogin()">
+        <br><button class="btn-action" style="margin-top:16px" onclick="tryLogin()">Unlock</button>
+        <p class="a-err" id="a-err">Wrong password</p>
+      </div>
+    </div>
+
+    <!-- Manage -->
+    <div id="a-manage" style="display:none">
+
+      <!-- Add Work -->
+      <div class="admin-section">
+        <p class="admin-s-label">Add Thumbnail</p>
+        <div class="a-form">
+          <div class="a-row"><label>Title / Channel</label><input id="w-title" type="text" placeholder="MrBeast – $1M Challenge"></div>
+          <div class="a-row"><label>Image URL</label><input id="w-img" type="text" placeholder="https://..."></div>
+          <div class="a-row"><label>Views</label><input id="w-views" type="text" placeholder="22M views"></div>
+          <div class="a-row"><label>YouTube Link (optional)</label><input id="w-link" type="text" placeholder="https://youtube.com/watch?v=..."></div>
+          <button class="btn-action" onclick="addWork()">+ Add to Portfolio</button>
+        </div>
+      </div>
+
+      <!-- Work List -->
+      <div class="admin-section">
+        <p class="admin-s-label">Thumbnails (<span id="a-wcount">0</span>)</p>
+        <div class="a-list" id="a-wlist"></div>
+      </div>
+
+      <!-- Add Client -->
+      <div class="admin-section">
+        <p class="admin-s-label">Add Client</p>
+        <div class="a-form">
+          <div class="a-row"><label>Channel / Creator Name</label><input id="cl-name" type="text" placeholder="MrBeast"></div>
+          <div class="a-row"><label>Profile Image URL</label><input id="cl-pfp" type="text" placeholder="https://..."></div>
+          <div class="a-row"><label>Subscribers (optional)</label><input id="cl-subs" type="text" placeholder="200M subs"></div>
+          <button class="btn-action" onclick="addClient()">+ Add Client</button>
+        </div>
+      </div>
+
+      <!-- Client List -->
+      <div class="admin-section">
+        <p class="admin-s-label">Clients (<span id="a-clcount">0</span>)</p>
+        <div class="a-list" id="a-cllist"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+/* ─── SUPABASE CONFIG ─── */
+const SUPA_URL  = 'https://jpgfidqqklulafnllrzq.supabase.co';
+const SUPA_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpwZ2ZpZHFxa2x1bGFmbmxscnpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0MjIzNjUsImV4cCI6MjA5Nzk5ODM2NX0.-RwUc0mrBb7KuH85_m_tIcy-Hi20lkGT9_XhyEVzFLI';
+const PASS      = 'vader2025';
+
+const db = {
+  async get(table) {
+    const r = await fetch(`${SUPA_URL}/rest/v1/${table}?order=id.asc`, {
+      headers: { apikey: SUPA_KEY, Authorization: `Bearer ${SUPA_KEY}` }
+    });
+    return r.ok ? r.json() : [];
+  },
+  async insert(table, row) {
+    const r = await fetch(`${SUPA_URL}/rest/v1/${table}`, {
+      method: 'POST',
+      headers: { apikey: SUPA_KEY, Authorization: `Bearer ${SUPA_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=representation' },
+      body: JSON.stringify(row)
+    });
+    return r.ok ? r.json() : null;
+  },
+  async remove(table, id) {
+    await fetch(`${SUPA_URL}/rest/v1/${table}?id=eq.${id}`, {
+      method: 'DELETE',
+      headers: { apikey: SUPA_KEY, Authorization: `Bearer ${SUPA_KEY}` }
+    });
+  }
+};
+
+let work = [], clients = [];
+
+/* ─── SLIDER ─── */
+function renderSlider() {
+  const track = document.getElementById('sliderTrack');
+  document.getElementById('wc-display').textContent = String(work.length).padStart(2,'0');
+  track.innerHTML = work.length ? work.map(w => `
+    <div class="slide" onclick="openLB('${w.img.replace(/'/g,"\\'")}')">
+      <div class="slide-img">
+        <img src="${w.img}" alt="${w.title}" draggable="false" loading="lazy">
+        <div class="slide-shimmer"></div>
+      </div>
+      <div class="slide-meta">
+        <span class="slide-name">${w.title}</span>
+        <span class="slide-views">${w.views||''}</span>
+      </div>
+    </div>`).join('')
+  : '<p style="color:#333;font-size:13px;padding:24px 0">No work added yet.</p>';
+}
+
+function initSlider() {
+  const track = document.getElementById('sliderTrack');
+  let drag=false, sx=0, sl=0;
+  track.addEventListener('mousedown', e => { drag=true; track.classList.add('grabbing'); sx=e.pageX; sl=track._x||0; });
+  document.addEventListener('mouseup', () => { drag=false; track.classList.remove('grabbing'); });
+  document.addEventListener('mousemove', e => {
+    if (!drag) return; e.preventDefault();
+    const max = -(track.scrollWidth - track.clientWidth - 112);
+    track._x = Math.max(max, Math.min(0, sl + (e.pageX-sx)*1.3));
+    track.style.transform = `translateX(${track._x}px)`;
+  });
+  track.addEventListener('touchstart', e => { sx=e.touches[0].pageX; sl=track._x||0; },{passive:true});
+  track.addEventListener('touchmove', e => {
+    const max = -(track.scrollWidth - track.clientWidth - 48);
+    track._x = Math.max(max, Math.min(0, sl + (e.touches[0].pageX-sx)*1.2));
+    track.style.transform = `translateX(${track._x}px)`;
+  },{passive:true});
+}
+
+/* ─── CLIENTS ─── */
+function renderClients() {
+  const grid = document.getElementById('clientsGrid');
+  if (!clients.length) { grid.innerHTML = '<p style="color:#333;font-size:13px">No clients added yet.</p>'; return; }
+  grid.innerHTML = clients.map(c => `
+    <div class="client-card">
+      ${c.pfp
+        ? `<img class="client-pfp" src="${c.pfp}" alt="${c.name}" loading="lazy">`
+        : `<div class="client-pfp-placeholder">${c.name.charAt(0).toUpperCase()}</div>`}
+      <div class="client-name">${c.name}</div>
+      ${c.subs ? `<div class="client-subs">${c.subs}</div>` : ''}
+    </div>`).join('');
+}
+
+/* ─── CURSOR ─── */
+let dx=0,dy=0,rx=0,ry=0;
+const dot  = document.getElementById('cursor-dot');
+const ring = document.getElementById('cursor-ring');
+document.addEventListener('mousemove', e => { dx=e.clientX; dy=e.clientY; });
+(function tickCursor() {
+  rx += (dx-rx)*.12; ry += (dy-ry)*.12;
+  dot.style.left  = dx+'px'; dot.style.top  = dy+'px';
+  ring.style.left = rx+'px'; ring.style.top = ry+'px';
+  requestAnimationFrame(tickCursor);
+})();
+document.querySelectorAll('a,button,.slide,.contact-cell,.client-card').forEach(el => {
+  el.addEventListener('mouseenter', () => document.body.classList.add('cursor-hover'));
+  el.addEventListener('mouseleave', () => document.body.classList.remove('cursor-hover'));
+});
+
+/* ─── COUNTER ─── */
+setTimeout(() => {
+  const el = document.getElementById('c-num');
+  let v=0; const iv = setInterval(() => { v+=.05; el.textContent=v.toFixed(1); if(v>=1){el.textContent='1';clearInterval(iv);} },18);
+}, 600);
+
+/* ─── SCROLL REVEAL ─── */
+const ro = new IntersectionObserver(entries => {
+  entries.forEach(e => { if(e.isIntersecting){ e.target.classList.add('in'); ro.unobserve(e.target); }});
+}, {threshold:.1});
+document.querySelectorAll('.reveal').forEach(el => ro.observe(el));
+
+/* ─── LIGHTBOX ─── */
+function openLB(src) { document.getElementById('lb-img').src=src; document.getElementById('lightbox').classList.add('open'); }
+function closeLB()   { document.getElementById('lightbox').classList.remove('open'); }
+document.getElementById('lightbox').addEventListener('click', e => { if(e.target.id==='lightbox') closeLB(); });
+
+/* ─── COPY ─── */
+function copyIt(text, el, tipSel) {
+  navigator.clipboard.writeText(text).catch(()=>{});
+  const tip = el.querySelector(tipSel);
+  if (!tip) return; const orig = tip.textContent;
+  tip.textContent = 'Copied!'; setTimeout(() => tip.textContent=orig, 1800);
+}
+
+/* ─── ADMIN ─── */
+let unlocked = false;
+function openAdmin()  { document.getElementById('admin-overlay').classList.add('open'); if(unlocked) showManage(); }
+function closeAdmin() { document.getElementById('admin-overlay').classList.remove('open'); }
+document.getElementById('admin-overlay').addEventListener('click', e => { if(e.target===document.getElementById('admin-overlay')) closeAdmin(); });
+
+function tryLogin() {
+  if (document.getElementById('a-pass').value === PASS) { unlocked=true; showManage(); }
+  else { document.getElementById('a-err').style.display='block'; document.getElementById('a-pass').value=''; }
+}
+function showManage() {
+  document.getElementById('a-login').style.display='none';
+  document.getElementById('a-manage').style.display='block';
+  renderAWork(); renderAClients();
+}
+
+async function addWork() {
+  const t=document.getElementById('w-title').value.trim();
+  const i=document.getElementById('w-img').value.trim();
+  if(!t||!i){alert('Title and image URL required.');return;}
+  const row = {title:t, img:i, views:document.getElementById('w-views').value.trim(), link:document.getElementById('w-link').value.trim()};
+  const res = await db.insert('Work', row);
+  if(res) { work.push(res[0]||{...row,id:Date.now()}); renderSlider(); renderAWork(); ['w-title','w-img','w-views','w-link'].forEach(id=>document.getElementById(id).value=''); }
+  else alert('Error saving — check Supabase RLS policies (disable RLS on Work table).');
+}
+async function removeWork(id) {
+  await db.remove('Work', id);
+  work = work.filter(w=>w.id!==id); renderSlider(); renderAWork();
+}
+function renderAWork() {
+  document.getElementById('a-wcount').textContent=work.length;
+  document.getElementById('a-wlist').innerHTML = work.map(w=>`
+    <div class="a-list-item">
+      <img class="a-thumb" src="${w.img}" alt="">
+      <div class="a-info"><div class="a-name">${w.title}</div><div class="a-sub">${w.views||''}</div></div>
+      <button class="a-rm" onclick="removeWork(${w.id})">Remove</button>
+    </div>`).join('') || '<p style="color:#333;font-size:12px">None yet.</p>';
+}
+
+async function addClient() {
+  const n=document.getElementById('cl-name').value.trim();
+  if(!n){alert('Name required.');return;}
+  const row = {name:n, pfp:document.getElementById('cl-pfp').value.trim(), subs:document.getElementById('cl-subs').value.trim()};
+  const res = await db.insert('Clients', row);
+  if(res) { clients.push(res[0]||{...row,id:Date.now()}); renderClients(); renderAClients(); ['cl-name','cl-pfp','cl-subs'].forEach(id=>document.getElementById(id).value=''); }
+  else alert('Error saving — check Supabase RLS policies (disable RLS on Clients table).');
+}
+async function removeClient(id) {
+  await db.remove('Clients', id);
+  clients = clients.filter(c=>c.id!==id); renderClients(); renderAClients();
+}
+function renderAClients() {
+  document.getElementById('a-clcount').textContent=clients.length;
+  document.getElementById('a-cllist').innerHTML = clients.map(c=>`
+    <div class="a-list-item">
+      ${c.pfp?`<img class="a-pfp-thumb" src="${c.pfp}" alt="">`:`<div class="a-pfp-thumb" style="display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:16px;color:#444">${c.name.charAt(0)}</div>`}
+      <div class="a-info"><div class="a-name">${c.name}</div>${c.subs?`<div class="a-sub">${c.subs}</div>`:''}</div>
+      <button class="a-rm" onclick="removeClient(${c.id})">Remove</button>
+    </div>`).join('') || '<p style="color:#333;font-size:12px">None yet.</p>';
+}
+
+/* ─── INIT — load from Supabase ─── */
+async function init() {
+  work    = await db.get('Work');
+  clients = await db.get('Clients');
+  renderSlider(); renderClients(); initSlider();
+}
+init();
+</script>
+</body>
+</html>
