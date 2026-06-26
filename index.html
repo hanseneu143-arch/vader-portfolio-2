@@ -33,31 +33,9 @@ body {
   color: var(--white);
   font-family: var(--body);
   overflow-x: hidden;
-  cursor: none;
 }
 
-/* ── CURSOR ── */
-#cursor-dot, #cursor-ring {
-  position: fixed;
-  pointer-events: none;
-  z-index: 9999;
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-}
-#cursor-dot {
-  width: 5px; height: 5px;
-  background: #fff;
-  transition: width .15s, height .15s, opacity .15s;
-}
-#cursor-ring {
-  width: 36px; height: 36px;
-  border: 1px solid rgba(255,255,255,0.35);
-  transition: width .3s cubic-bezier(.25,.46,.45,.94),
-              height .3s cubic-bezier(.25,.46,.45,.94),
-              border-color .3s, opacity .15s;
-}
-body.cursor-hover #cursor-ring { width: 56px; height: 56px; border-color: rgba(255,255,255,.6); }
-body.cursor-hover #cursor-dot  { width: 3px; height: 3px; opacity: .4; }
+/* ── CURSOR (removed) ── */
 
 /* ── NAV ── */
 nav {
@@ -196,7 +174,7 @@ nav::before {
   text-decoration: none;
   padding: 14px 30px;
   transition: all .25s;
-  cursor: none;
+  cursor: default;
 }
 .btn-white  { background:#fff; color:#000; border:1px solid #fff; }
 .btn-white:hover { background:transparent; color:#fff; }
@@ -262,7 +240,7 @@ nav::before {
 .slider-track {
   display: flex; gap: 16px;
   padding: 16px 56px 24px;
-  cursor: none;
+  cursor: default;
   user-select: none;
   will-change: transform;
 }
@@ -404,7 +382,7 @@ nav::before {
   background: var(--bg); padding: 40px 32px;
   transition: background .3s;
   text-decoration: none; display: block;
-  cursor: none;
+  cursor: default;
 }
 .contact-cell:hover { background: var(--bg2); }
 .contact-platform { font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--accent); margin-bottom: 14px; }
@@ -422,6 +400,80 @@ nav::before {
   box-shadow: 0 0 0 1px rgba(0,128,129,.5), 0 0 18px rgba(0,128,129,.25);
 }
 
+/* ── BEFORE / AFTER ── */
+#transformations { padding: 100px 56px; }
+.ba-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 56px; }
+
+.ba-item { position: relative; user-select: none; }
+.ba-wrap {
+  position: relative;
+  aspect-ratio: 16/9;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: var(--bg3);
+}
+.ba-before, .ba-after {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+}
+.ba-before img, .ba-after img {
+  width: 100%; height: 100%;
+  object-fit: cover; display: block;
+  pointer-events: none;
+}
+.ba-after {
+  clip-path: inset(0 50% 0 0);
+  transition: clip-path .04s linear;
+}
+.ba-divider {
+  position: absolute; top: 0; bottom: 0;
+  left: 50%; width: 2px;
+  background: var(--accent);
+  box-shadow: 0 0 12px var(--accent), 0 0 24px rgba(0,128,129,.4);
+  transform: translateX(-50%);
+  transition: left .04s linear;
+  pointer-events: none;
+}
+.ba-handle {
+  position: absolute; top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 3px rgba(0,128,129,.3), 0 0 20px rgba(0,128,129,.5);
+  display: flex; align-items: center; justify-content: center;
+  cursor: ew-resize;
+  transition: left .04s linear, box-shadow .3s;
+  z-index: 10;
+}
+.ba-handle:hover {
+  box-shadow: 0 0 0 4px rgba(0,128,129,.5), 0 0 28px rgba(0,128,129,.7);
+}
+.ba-handle svg { width: 18px; height: 18px; fill: #fff; flex-shrink: 0; }
+
+.ba-labels {
+  position: absolute; bottom: 12px; left: 0; right: 0;
+  display: flex; justify-content: space-between;
+  padding: 0 14px; pointer-events: none;
+}
+.ba-label {
+  font-size: 10px; letter-spacing: .15em; text-transform: uppercase;
+  background: rgba(0,0,0,.7); color: #fff;
+  padding: 4px 10px; backdrop-filter: blur(4px);
+}
+.ba-label.after { color: var(--accent); }
+
+.ba-caption {
+  margin-top: 12px;
+  font-size: 11px; color: var(--muted); letter-spacing: .08em; text-align: center;
+}
+
+@media (max-width: 768px) {
+  .ba-grid { grid-template-columns: 1fr; }
+  #transformations { padding: 80px 24px; }
+}
+
 /* ── FOOTER ── */
 footer {
   padding: 40px 56px;
@@ -430,7 +482,7 @@ footer {
 }
 .f-logo { font-family: var(--display); font-size: 16px; letter-spacing: .1em; color: var(--dimmer); }
 .f-copy { font-size: 11px; color: var(--dimmer); }
-.f-admin { font-size: 11px; color: var(--bg3); text-decoration: none; cursor: none; transition: color .2s; }
+.f-admin { font-size: 11px; color: var(--bg3); text-decoration: none; cursor: default; transition: color .2s; }
 .f-admin:hover { color: var(--dimmer); }
 
 /* ── REVEAL ANIMATIONS ── */
@@ -459,7 +511,7 @@ footer {
 .admin-close-btn {
   background: none; border: 1px solid var(--border); color: var(--muted);
   padding: 8px 20px; font-size: 10px; letter-spacing: .15em; text-transform: uppercase;
-  cursor: none; font-family: var(--body); transition: all .2s;
+  cursor: default; font-family: var(--body); transition: all .2s;
 }
 .admin-close-btn:hover { border-color: var(--dimmer); color: #fff; }
 
@@ -481,7 +533,7 @@ footer {
 .btn-action {
   background: #fff; color: #000; border: none; padding: 13px 28px;
   font-size: 11px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase;
-  cursor: none; font-family: var(--body); transition: opacity .2s; margin-top: 4px;
+  cursor: default; font-family: var(--body); transition: opacity .2s; margin-top: 4px;
 }
 .btn-action:hover { opacity: .85; }
 .btn-action.danger { background: transparent; color: var(--muted); border: 1px solid var(--border); margin-top: 0; }
@@ -494,7 +546,7 @@ footer {
 .a-info { flex: 1; min-width: 0; }
 .a-name { font-size: 12px; font-weight: 500; color: var(--off); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .a-sub  { font-size: 11px; color: var(--muted); margin-top: 2px; }
-.a-rm { background: none; border: 1px solid var(--border); color: var(--muted); padding: 5px 12px; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; cursor: none; font-family: var(--body); transition: all .2s; flex-shrink: 0; }
+.a-rm { background: none; border: 1px solid var(--border); color: var(--muted); padding: 5px 12px; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; cursor: default; font-family: var(--body); transition: all .2s; flex-shrink: 0; }
 .a-rm:hover { border-color: #fff; color: #fff; }
 
 .a-login { background: var(--bg2); border: 1px solid var(--border); padding: 48px; text-align: center; }
@@ -512,7 +564,7 @@ footer {
 #lightbox { display: none; position: fixed; inset: 0; z-index: 800; background: rgba(0,0,0,.96); align-items: center; justify-content: center; }
 #lightbox.open { display: flex; }
 #lightbox img { max-width: 92vw; max-height: 92vh; object-fit: contain; }
-#lb-close { position: absolute; top: 28px; right: 28px; background: none; border: 1px solid var(--border); color: var(--muted); padding: 8px 20px; font-size: 10px; letter-spacing: .15em; text-transform: uppercase; cursor: none; font-family: var(--body); transition: all .2s; }
+#lb-close { position: absolute; top: 28px; right: 28px; background: none; border: 1px solid var(--border); color: var(--muted); padding: 8px 20px; font-size: 10px; letter-spacing: .15em; text-transform: uppercase; cursor: default; font-family: var(--body); transition: all .2s; }
 #lb-close:hover { border-color: #fff; color: #fff; }
 
 /* ── KEYFRAMES ── */
@@ -552,14 +604,12 @@ footer {
 <body>
 
 <!-- CURSOR -->
-<div id="cursor-dot"></div>
-<div id="cursor-ring"></div>
-
 <!-- NAV -->
 <nav>
   <a class="nav-logo" href="#home">VADER</a>
   <ul class="nav-links">
     <li><a href="#work">Work</a></li>
+    <li><a href="#transformations">Before & After</a></li>
     <li><a href="#clients">Clients</a></li>
     <li><a href="#contact">Contact</a></li>
   </ul>
@@ -601,6 +651,18 @@ footer {
     <div class="slider-track" id="sliderTrack"></div>
   </div>
   <p class="drag-label">← drag to explore →</p>
+</section>
+
+<!-- BEFORE / AFTER -->
+<section id="transformations">
+  <div class="divider" style="margin-bottom:100px"></div>
+  <div class="reveal">
+    <p class="s-label">The Difference</p>
+    <h2 class="s-title">Before &amp; After</h2>
+  </div>
+  <div class="ba-grid reveal reveal-delay-1" id="baGrid">
+    <p style="color:#333;font-size:13px;padding:24px 0">Loading...</p>
+  </div>
 </section>
 
 <!-- CLIENTS -->
@@ -706,6 +768,23 @@ footer {
         <div class="a-list" id="a-cllist"></div>
       </div>
 
+      <!-- Add Before/After -->
+      <div class="admin-section">
+        <p class="admin-s-label">Add Before &amp; After</p>
+        <div class="a-form">
+          <div class="a-row"><label>Title (optional)</label><input id="ba-title" type="text" placeholder="Jynxzi Thumbnail"></div>
+          <div class="a-row"><label>Before Image URL</label><input id="ba-before" type="text" placeholder="https://..."></div>
+          <div class="a-row"><label>After Image URL</label><input id="ba-after-url" type="text" placeholder="https://..."></div>
+          <button class="btn-action" onclick="addBA()">+ Add Before &amp; After</button>
+        </div>
+      </div>
+
+      <!-- Before/After List -->
+      <div class="admin-section">
+        <p class="admin-s-label">Before &amp; After (<span id="a-bacount">0</span>)</p>
+        <div class="a-list" id="a-balist"></div>
+      </div>
+
     </div>
   </div>
 </div>
@@ -792,22 +871,6 @@ function renderClients() {
     </div>`).join('');
 }
 
-/* ─── CURSOR ─── */
-let dx=0,dy=0,rx=0,ry=0;
-const dot  = document.getElementById('cursor-dot');
-const ring = document.getElementById('cursor-ring');
-document.addEventListener('mousemove', e => { dx=e.clientX; dy=e.clientY; });
-(function tickCursor() {
-  rx += (dx-rx)*.12; ry += (dy-ry)*.12;
-  dot.style.left  = dx+'px'; dot.style.top  = dy+'px';
-  ring.style.left = rx+'px'; ring.style.top = ry+'px';
-  requestAnimationFrame(tickCursor);
-})();
-document.querySelectorAll('a,button,.slide,.contact-cell,.client-card').forEach(el => {
-  el.addEventListener('mouseenter', () => document.body.classList.add('cursor-hover'));
-  el.addEventListener('mouseleave', () => document.body.classList.remove('cursor-hover'));
-});
-
 /* ─── COUNTER ─── */
 setTimeout(() => {
   const el = document.getElementById('c-num');
@@ -846,7 +909,7 @@ function tryLogin() {
 function showManage() {
   document.getElementById('a-login').style.display='none';
   document.getElementById('a-manage').style.display='block';
-  renderAWork(); renderAClients();
+  renderAWork(); renderAClients(); renderABA();
 }
 
 async function addWork() {
@@ -894,11 +957,128 @@ function renderAClients() {
     </div>`).join('') || '<p style="color:#333;font-size:12px">None yet.</p>';
 }
 
+/* ─── BEFORE / AFTER ─── */
+let baItems = [];
+
+function renderBA() {
+  const grid = document.getElementById('baGrid');
+  if (!baItems.length) {
+    grid.innerHTML = '<p style="color:#333;font-size:13px;padding:24px 0">No before & after added yet.</p>';
+    return;
+  }
+  grid.innerHTML = baItems.map((item, i) => `
+    <div class="ba-item">
+      <div class="ba-wrap" id="baw${item.id}">
+        <div class="ba-before"><img src="${item.before_img}" alt="Before" draggable="false" loading="lazy"></div>
+        <div class="ba-after" id="baa${item.id}"><img src="${item.after_img}" alt="After" draggable="false" loading="lazy"></div>
+        <div class="ba-divider" id="bad${item.id}"></div>
+        <div class="ba-handle" id="bah${item.id}">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8 5l-7 7 7 7V5zm8 0v14l7-7-7-7z"/></svg>
+        </div>
+        <div class="ba-labels">
+          <span class="ba-label before">Before</span>
+          <span class="ba-label after">After</span>
+        </div>
+      </div>
+      <p class="ba-caption">${item.title || 'Drag to compare'}</p>
+    </div>`).join('');
+
+  // init each slider after render
+  baItems.forEach(item => {
+    initBA('baw'+item.id, 'baa'+item.id, 'bad'+item.id, 'bah'+item.id);
+  });
+
+  // re-observe reveals
+  document.querySelectorAll('.ba-item').forEach((el, i) => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(28px)';
+    el.style.filter = 'blur(5px)';
+    el.style.transition = `opacity .9s cubic-bezier(.22,1,.36,1) ${i * .12}s, transform .9s cubic-bezier(.22,1,.36,1) ${i * .12}s, filter .9s cubic-bezier(.22,1,.36,1) ${i * .12}s`;
+    setTimeout(() => {
+      el.style.opacity = '1';
+      el.style.transform = 'none';
+      el.style.filter = 'blur(0)';
+    }, 100);
+  });
+}
+
+function initBA(wrapId, afterId, divId, handleId) {
+  const wrap   = document.getElementById(wrapId);
+  const after  = document.getElementById(afterId);
+  const divEl  = document.getElementById(divId);
+  const handle = document.getElementById(handleId);
+  if (!wrap || !after || !divEl || !handle) return;
+  let dragging = false;
+
+  function setPos(pct) {
+    pct = Math.max(2, Math.min(98, pct));
+    after.style.clipPath = `inset(0 ${100 - pct}% 0 0)`;
+    divEl.style.left     = pct + '%';
+    handle.style.left    = pct + '%';
+  }
+
+  function onMove(clientX) {
+    const rect = wrap.getBoundingClientRect();
+    setPos(((clientX - rect.left) / rect.width) * 100);
+  }
+
+  handle.addEventListener('mousedown',   e => { dragging = true; e.preventDefault(); });
+  document.addEventListener('mouseup',   () => dragging = false);
+  document.addEventListener('mousemove', e => { if (dragging) onMove(e.clientX); });
+  handle.addEventListener('touchstart',  () => { dragging = true; }, { passive: true });
+  document.addEventListener('touchend',  () => dragging = false);
+  document.addEventListener('touchmove', e => { if (dragging) onMove(e.touches[0].clientX); }, { passive: true });
+
+  // intro animation
+  const obs = new IntersectionObserver(entries => {
+    if (entries[0].isIntersecting) {
+      let p = 50, dir = -1, steps = 0;
+      const iv = setInterval(() => {
+        p += dir * 1.2; setPos(p); steps++;
+        if (p <= 20) dir = 1;
+        if (p >= 50 && steps > 40) { clearInterval(iv); setPos(50); }
+      }, 16);
+      obs.disconnect();
+    }
+  }, { threshold: .4 });
+  obs.observe(wrap);
+}
+
+async function addBA() {
+  const before = document.getElementById('ba-before').value.trim();
+  const after  = document.getElementById('ba-after-url').value.trim();
+  if (!before || !after) { alert('Both image URLs required.'); return; }
+  const row = { title: document.getElementById('ba-title').value.trim(), before_img: before, after_img: after };
+  const res = await db.insert('BeforeAfter', row);
+  if (res) {
+    baItems.unshift(res[0] || { ...row, id: Date.now() });
+    renderBA(); renderABA();
+    ['ba-title','ba-before','ba-after-url'].forEach(id => document.getElementById(id).value = '');
+  } else alert('Error — check Supabase RLS on BeforeAfter table.');
+}
+
+async function removeBA(id) {
+  await db.remove('BeforeAfter', id);
+  baItems = baItems.filter(b => b.id !== id);
+  renderBA(); renderABA();
+}
+
+function renderABA() {
+  document.getElementById('a-bacount').textContent = baItems.length;
+  document.getElementById('a-balist').innerHTML = baItems.map(b => `
+    <div class="a-list-item">
+      <img class="a-thumb" src="${b.before_img}" alt="">
+      <div class="a-info"><div class="a-name">${b.title || 'Before & After'}</div><div class="a-sub">→ ${b.after_img.slice(0,40)}...</div></div>
+      <button class="a-rm" onclick="removeBA(${b.id})">Remove</button>
+    </div>`).join('') || '<p style="color:#333;font-size:12px">None yet.</p>';
+}
+
 /* ─── INIT — load from Supabase ─── */
 async function init() {
   work    = await db.get('Work');
   clients = await db.get('Clients');
-  renderSlider(); renderClients(); initSlider();
+  baItems = await db.get('BeforeAfter');
+  renderSlider(); renderClients(); initSlider(); renderBA();
 }
 init();
 </script>
