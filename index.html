@@ -572,10 +572,11 @@ footer {
 .a-login input {
   background: var(--bg); border: 1px solid var(--border); color: #fff;
   padding: 12px 20px; font-size: 14px; font-family: var(--body);
-  outline: none; width: 220px; text-align: center; letter-spacing: .15em;
+  outline: none; width: 260px; text-align: center; letter-spacing: .08em;
+  display: block; margin: 0 auto 8px;
   transition: border-color .2s;
 }
-.a-login input:focus { border-color: var(--dimmer); }
+.a-login input:focus { border-color: var(--accent); }
 .a-err { font-size: 12px; color: var(--muted); margin-top: 10px; display: none; }
 
 /* ── LIGHTBOX ── */
@@ -584,6 +585,78 @@ footer {
 #lightbox img { max-width: 92vw; max-height: 92vh; object-fit: contain; }
 #lb-close { position: absolute; top: 28px; right: 28px; background: none; border: 1px solid var(--border); color: var(--muted); padding: 8px 20px; font-size: 10px; letter-spacing: .15em; text-transform: uppercase; cursor: default; font-family: var(--body); transition: all .2s; }
 #lb-close:hover { border-color: #fff; color: #fff; }
+
+/* ── PAGE LOADER ── */
+#loader {
+  position: fixed; inset: 0; z-index: 9000;
+  background: var(--bg);
+  display: flex; align-items: center; justify-content: center;
+  transition: opacity .6s cubic-bezier(.22,1,.36,1), visibility .6s;
+}
+#loader.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+.loader-text {
+  font-family: var(--display);
+  font-size: clamp(48px, 10vw, 120px);
+  letter-spacing: .12em;
+  color: #fff;
+  animation: loader-in 1s cubic-bezier(.22,1,.36,1) forwards;
+}
+.loader-text span { color: var(--accent); }
+@keyframes loader-in {
+  from { opacity: 0; letter-spacing: .4em; }
+  to   { opacity: 1; letter-spacing: .12em; }
+}
+
+/* ── SCROLL PROGRESS ── */
+#progress {
+  position: fixed; top: 0; left: 0; z-index: 9999;
+  height: 2px; width: 0%;
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent);
+  transition: width .1s linear;
+  pointer-events: none;
+}
+
+/* ── SLIDE HOVER LINK PREVIEW ── */
+.slide-link-preview {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  background: linear-gradient(to top, rgba(0,0,0,.9) 0%, transparent 100%);
+  padding: 32px 14px 12px;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity .3s, transform .3s;
+  pointer-events: none;
+  display: flex; align-items: center; gap: 8px;
+}
+.slide:hover .slide-link-preview { opacity: 1; transform: none; }
+.slide-link-icon {
+  width: 24px; height: 24px; border-radius: 50%;
+  background: var(--accent);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.slide-link-icon svg { width: 12px; height: 12px; fill: #fff; }
+.slide-link-text { font-size: 10px; color: #fff; letter-spacing: .1em; text-transform: uppercase; }
+
+/* ── ADMIN IMAGE PREVIEW ── */
+.img-preview-wrap { margin-top: 10px; display: none; }
+.img-preview-wrap img { width: 100%; aspect-ratio: 16/9; object-fit: cover; border: 1px solid var(--border); }
+.img-preview-wrap.show { display: block; }
+
+/* ── ADMIN EDIT INLINE ── */
+.a-edit-row {
+  display: none; background: var(--bg); border-top: 1px solid var(--border);
+  padding: 12px 16px; gap: 8px; flex-wrap: wrap; align-items: center;
+}
+.a-edit-row.open { display: flex; }
+.a-edit-row input {
+  flex: 1; min-width: 120px; background: var(--bg2); border: 1px solid var(--border);
+  color: #fff; padding: 7px 10px; font-size: 12px; font-family: var(--body); outline: none;
+}
+.a-edit-row input:focus { border-color: var(--accent); }
+.btn-save { background: var(--accent); color: #fff; border: none; padding: 7px 16px; font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; cursor: pointer; font-family: var(--body); }
+.btn-edit { background: none; border: 1px solid var(--border); color: var(--muted); padding: 5px 12px; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; cursor: pointer; font-family: var(--body); transition: all .2s; flex-shrink: 0; }
+.btn-edit:hover { border-color: var(--accent); color: var(--accent); }
 
 /* ── KEYFRAMES ── */
 @keyframes up { to { opacity: 1; transform: none; } }
@@ -621,6 +694,8 @@ footer {
 </head>
 <body>
 
+<!-- PROGRESS -->
+<div id="progress"></div>
 <!-- CURSOR -->
 <!-- NAV -->
 <nav>
@@ -747,10 +822,11 @@ footer {
     <!-- Login -->
     <div id="a-login">
       <div class="a-login">
-        <p>Enter password to manage content</p>
+        <p>Sign in to manage content</p>
+        <input type="email" id="a-email" placeholder="your@email.com" style="margin-bottom:8px" onkeydown="if(event.key==='Enter')tryLogin()">
         <input type="password" id="a-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')tryLogin()">
         <br><button class="btn-action" style="margin-top:16px" onclick="tryLogin()">Unlock</button>
-        <p class="a-err" id="a-err">Wrong password</p>
+        <p class="a-err" id="a-err">Wrong email or password</p>
       </div>
     </div>
 
@@ -762,7 +838,8 @@ footer {
         <p class="admin-s-label">Add Thumbnail</p>
         <div class="a-form">
           <div class="a-row"><label>Title / Channel</label><input id="w-title" type="text" placeholder="MrBeast – $1M Challenge"></div>
-          <div class="a-row"><label>Image URL</label><input id="w-img" type="text" placeholder="https://..."></div>
+          <div class="a-row"><label>Image URL</label><input id="w-img" type="text" placeholder="https://..." oninput="previewImg('w-img','w-img-preview')"></div>
+          <div class="img-preview-wrap" id="w-img-preview"><img id="w-img-preview-img" src="" alt="Preview"></div>
           <div class="a-row"><label>Views</label><input id="w-views" type="text" placeholder="22M views"></div>
           <div class="a-row"><label>YouTube Link (optional)</label><input id="w-link" type="text" placeholder="https://youtube.com/watch?v=..."></div>
           <button class="btn-action" onclick="addWork()">+ Add to Portfolio</button>
@@ -780,7 +857,8 @@ footer {
         <p class="admin-s-label">Add Client</p>
         <div class="a-form">
           <div class="a-row"><label>Channel / Creator Name</label><input id="cl-name" type="text" placeholder="MrBeast"></div>
-          <div class="a-row"><label>Profile Image URL</label><input id="cl-pfp" type="text" placeholder="https://..."></div>
+          <div class="a-row"><label>Profile Image URL</label><input id="cl-pfp" type="text" placeholder="https://..." oninput="previewImg('cl-pfp','cl-pfp-preview')"></div>
+          <div class="img-preview-wrap" id="cl-pfp-preview"><img id="cl-pfp-preview-img" src="" alt="Preview" style="aspect-ratio:1;border-radius:50%;width:64px;height:64px;object-fit:cover"></div>
           <div class="a-row"><label>Subscribers (optional)</label><input id="cl-subs" type="text" placeholder="200M subs"></div>
           <button class="btn-action" onclick="addClient()">+ Add Client</button>
         </div>
@@ -817,7 +895,6 @@ footer {
 /* ─── SUPABASE CONFIG ─── */
 const SUPA_URL  = 'https://jpgfidqqklulafnllrzq.supabase.co';
 const SUPA_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpwZ2ZpZHFxa2x1bGFmbmxscnpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0MjIzNjUsImV4cCI6MjA5Nzk5ODM2NX0.-RwUc0mrBb7KuH85_m_tIcy-Hi20lkGT9_XhyEVzFLI';
-const PASS      = 'vader2025';
 
 const db = {
   async get(table) {
@@ -895,10 +972,24 @@ function renderClients() {
     </div>`).join('');
 }
 
-/* ─── NAV SCROLL ─── */
+/* ─── SCROLL PROGRESS ─── */
 window.addEventListener('scroll', () => {
+  const el = document.documentElement;
+  const pct = (el.scrollTop / (el.scrollHeight - el.clientHeight)) * 100;
+  document.getElementById('progress').style.width = pct + '%';
   document.querySelector('nav').classList.toggle('scrolled', window.scrollY > 60);
 });
+
+/* ─── IMAGE PREVIEW ─── */
+function previewImg(inputId, wrapId) {
+  const url = document.getElementById(inputId).value.trim();
+  const wrap = document.getElementById(wrapId);
+  const img  = wrap.querySelector('img');
+  if (url) { img.src = url; wrap.classList.add('show'); }
+  else { wrap.classList.remove('show'); }
+}
+
+/* ─── NAV SCROLL (merged above) ─── */
 
 /* ─── SLIDER ARROWS ─── */
 function slideBy(dir) {
@@ -942,9 +1033,23 @@ function openAdmin()  { document.getElementById('admin-overlay').classList.add('
 function closeAdmin() { document.getElementById('admin-overlay').classList.remove('open'); }
 document.getElementById('admin-overlay').addEventListener('click', e => { if(e.target===document.getElementById('admin-overlay')) closeAdmin(); });
 
-function tryLogin() {
-  if (document.getElementById('a-pass').value === PASS) { unlocked=true; showManage(); }
-  else { document.getElementById('a-err').style.display='block'; document.getElementById('a-pass').value=''; }
+async function tryLogin() {
+  const email = document.getElementById('a-email').value.trim();
+  const pass  = document.getElementById('a-pass').value;
+  document.getElementById('a-err').style.display = 'none';
+  const r = await fetch(`${SUPA_URL}/auth/v1/token?grant_type=password`, {
+    method: 'POST',
+    headers: { apikey: SUPA_KEY, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password: pass })
+  });
+  const data = await r.json();
+  if (data.access_token) {
+    unlocked = true;
+    showManage();
+  } else {
+    document.getElementById('a-err').style.display = 'block';
+    document.getElementById('a-pass').value = '';
+  }
 }
 function showManage() {
   document.getElementById('a-login').style.display='none';
@@ -958,20 +1063,46 @@ async function addWork() {
   if(!t||!i){alert('Title and image URL required.');return;}
   const row = {title:t, img:i, views:document.getElementById('w-views').value.trim(), link:document.getElementById('w-link').value.trim()};
   const res = await db.insert('Work', row);
-  if(res) { work.push(res[0]||{...row,id:Date.now()}); renderSlider(); renderAWork(); ['w-title','w-img','w-views','w-link'].forEach(id=>document.getElementById(id).value=''); }
+  if(res) { work.unshift(res[0]||{...row,id:Date.now()}); renderSlider(); renderAWork(); ['w-title','w-img','w-views','w-link'].forEach(id=>document.getElementById(id).value=''); document.getElementById('w-img-preview').classList.remove('show'); }
   else alert('Error saving — check Supabase RLS policies (disable RLS on Work table).');
 }
 async function removeWork(id) {
   await db.remove('Work', id);
   work = work.filter(w=>w.id!==id); renderSlider(); renderAWork();
 }
+async function saveWorkEdit(id) {
+  const title = document.getElementById(`edit-title-${id}`).value.trim();
+  const views = document.getElementById(`edit-views-${id}`).value.trim();
+  const r = await fetch(`${SUPA_URL}/rest/v1/Work?id=eq.${id}`, {
+    method: 'PATCH',
+    headers: { apikey: SUPA_KEY, Authorization: `Bearer ${SUPA_KEY}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ title, views })
+  });
+  if (r.ok) {
+    const w = work.find(w=>w.id===id);
+    if(w){ w.title=title; w.views=views; }
+    renderSlider(); renderAWork();
+  }
+}
+function toggleEdit(id) {
+  const row = document.getElementById(`edit-row-${id}`);
+  row.classList.toggle('open');
+}
 function renderAWork() {
   document.getElementById('a-wcount').textContent=work.length;
   document.getElementById('a-wlist').innerHTML = work.map(w=>`
-    <div class="a-list-item">
-      <img class="a-thumb" src="${w.img}" alt="">
-      <div class="a-info"><div class="a-name">${w.title}</div><div class="a-sub">${w.views||''}</div></div>
-      <button class="a-rm" onclick="removeWork(${w.id})">Remove</button>
+    <div class="a-list-item" style="flex-direction:column;padding:0;gap:0">
+      <div style="display:flex;align-items:center;gap:14px;padding:14px 16px">
+        <img class="a-thumb" src="${w.img}" alt="">
+        <div class="a-info"><div class="a-name">${w.title}</div><div class="a-sub">${w.views||''}</div></div>
+        <button class="btn-edit" onclick="toggleEdit(${w.id})">Edit</button>
+        <button class="a-rm" onclick="removeWork(${w.id})">Remove</button>
+      </div>
+      <div class="a-edit-row" id="edit-row-${w.id}">
+        <input id="edit-title-${w.id}" type="text" value="${w.title}" placeholder="Title">
+        <input id="edit-views-${w.id}" type="text" value="${w.views||''}" placeholder="Views (e.g. 22M views)" style="max-width:160px">
+        <button class="btn-save" onclick="saveWorkEdit(${w.id})">Save</button>
+      </div>
     </div>`).join('') || '<p style="color:#333;font-size:12px">None yet.</p>';
 }
 
