@@ -1,0 +1,1264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vader — Thumbnails that get clicked</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:       #080808;
+  --bg2:      #0f0f0f;
+  --bg3:      #161616;
+  --border:   #222;
+  --white:    #FFFFFF;
+  --off:      #E8E8E8;
+  --muted:    #666;
+  --dimmer:   #333;
+  --accent:   #008081;
+  --accent-dim: rgba(0,128,129,0.12);
+  --glow:     rgba(255,255,255,0.06);
+  --glow-strong: rgba(255,255,255,0.12);
+  --display:  'Bebas Neue', sans-serif;
+  --body:     'Inter', sans-serif;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--white);
+  font-family: var(--body);
+  overflow-x: hidden;
+}
+
+/* ── CURSOR (removed) ── */
+
+/* ── NAV ── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0;
+  z-index: 200;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 24px 56px;
+  background: rgba(8,8,8,0);
+  transition: background .4s, padding .4s;
+}
+nav.scrolled {
+  background: rgba(8,8,8,.97);
+  padding: 18px 56px;
+  border-bottom: 1px solid var(--border);
+}
+nav::before { display: none; }
+.nav-logo {
+  font-family: var(--display);
+  font-size: 20px;
+  letter-spacing: .12em;
+  color: #fff;
+  text-decoration: none;
+  position: relative;
+}
+.nav-links { display: flex; gap: 40px; list-style: none; position: relative; }
+.nav-links a {
+  font-size: 11px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-decoration: none;
+  transition: color .2s;
+}
+.nav-links a:hover { color: #fff; }
+
+/* ── HERO ── */
+#home {
+  min-height: 100vh;
+  display: flex; flex-direction: column; justify-content: flex-end;
+  padding: 0 56px 96px;
+  position: relative;
+  overflow: hidden;
+}
+.hero-noise {
+  position: absolute; inset: 0; pointer-events: none; z-index: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  background-size: 200px;
+  opacity: .4;
+}
+.hero-content { position: relative; z-index: 1; }
+
+.hero-tag {
+  display: inline-block;
+  font-size: 10px;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--accent);
+  border: 1px solid rgba(0,128,129,0.35);
+  padding: 6px 14px;
+  margin-bottom: 32px;
+  opacity: 0;
+  transform: translateY(16px);
+  animation: up .7s .1s forwards;
+}
+.hero-h1 {
+  font-family: var(--display);
+  font-size: clamp(80px, 13vw, 200px);
+  line-height: .88;
+  letter-spacing: -.01em;
+  color: #fff;
+  opacity: 0;
+  transform: translateY(40px);
+  animation: up .9s .22s forwards;
+  text-shadow: none;
+}
+.hero-h1 em { font-style: normal; color: var(--accent); }
+.contact-title em { font-style: normal; color: var(--accent); }
+.hero-row {
+  margin-top: 40px;
+  display: flex; align-items: flex-end; gap: 64px;
+  opacity: 0;
+  transform: translateY(20px);
+  animation: up .8s .4s forwards;
+}
+.hero-desc {
+  max-width: 260px;
+  font-size: 13px;
+  line-height: 1.75;
+  color: var(--muted);
+}
+.hero-counter { flex-shrink: 0; }
+.counter-num {
+  font-family: var(--display);
+  font-size: clamp(44px, 6vw, 80px);
+  line-height: 1;
+  color: #fff;
+  letter-spacing: -.02em;
+  text-shadow: none;
+  animation: none;
+}
+.counter-label {
+  font-size: 10px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-top: 6px;
+}
+
+/* ── AMBIENT ORBS ── */
+.hero-orb {
+  position: absolute;
+  width: 600px; height: 600px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(0,128,129,.1) 0%, transparent 70%);
+  top: 10%; right: -80px; pointer-events: none;
+  animation: orb-drift 12s ease-in-out infinite;
+  filter: blur(48px);
+}
+.hero-orb-2 {
+  position: absolute;
+  width: 280px; height: 280px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,255,255,.035) 0%, transparent 70%);
+  bottom: 22%; left: 8%; pointer-events: none;
+  animation: orb-drift 18s ease-in-out 3s infinite reverse;
+  filter: blur(32px);
+}
+.hero-ctas {
+  margin-top: 48px;
+  display: flex; gap: 12px;
+  opacity: 0; animation: up .7s .55s forwards;
+}
+.btn {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  text-decoration: none;
+  padding: 14px 30px;
+  transition: all .25s;
+  cursor: default;
+}
+.btn-white  { background:#fff; color:#000; border:1px solid #fff; }
+.btn-white:hover { background:transparent; color:#fff; }
+.btn-outline { background:transparent; color:var(--muted); border:1px solid var(--border); }
+.btn-outline:hover { border-color:var(--dimmer); color:#fff; }
+
+.hero-scroll {
+  position: absolute; right: 56px; bottom: 96px;
+  font-size: 10px; letter-spacing: .18em; text-transform: uppercase;
+  color: var(--muted); writing-mode: vertical-rl;
+  display: flex; align-items: center; gap: 14px;
+  opacity: 0; animation: up .7s .7s forwards;
+}
+.hero-scroll::after {
+  content: ''; display: block;
+  width: 1px; height: 52px;
+  background: var(--border);
+}
+
+/* ── SECTION SHARED ── */
+.s-label {
+  font-size: 10px; letter-spacing: .22em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 14px;
+}
+.s-title {
+  font-family: var(--display);
+  font-size: clamp(44px, 7vw, 88px);
+  line-height: .95; color: #fff;
+  text-shadow: none;
+  position: relative; display: inline-block;
+}
+.s-title::after {
+  content: '';
+  position: absolute;
+  bottom: -6px; left: 0;
+  width: 100%; height: 1px;
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform .7s cubic-bezier(.22,1,.36,1) .25s;
+}
+.reveal.in .s-title::after { transform: scaleX(1); }
+.divider { width: 100%; height: 1px; background: var(--border); }
+
+/* ── WORK SLIDER ── */
+#work { padding: 120px 0 80px; }
+.work-head {
+  padding: 0 56px;
+  display: flex; align-items: flex-end; justify-content: space-between;
+  margin-bottom: 56px;
+}
+.work-count {
+  font-family: var(--display);
+  font-size: clamp(80px, 10vw, 140px);
+  color: var(--bg3); line-height: 1; user-select: none;
+  /* outlined text */
+  -webkit-text-stroke: 1px var(--border);
+  color: transparent;
+}
+
+.slider-outer { overflow: visible; position: relative; }
+
+.slider-arrow {
+  position: absolute; top: 42%; z-index: 10;
+  transform: translateY(-50%);
+  width: 40px; height: 40px;
+  border: 1px solid rgba(0,128,129,.4);
+  background: rgba(8,8,8,.85);
+  color: var(--accent);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: border-color .2s, background .2s, box-shadow .2s;
+  backdrop-filter: blur(6px);
+}
+.slider-arrow:hover { border-color: var(--accent); background: rgba(0,128,129,.15); box-shadow: 0 0 12px rgba(0,128,129,.3); }
+.slider-arrow svg { width: 16px; height: 16px; }
+.slider-arrow.prev { left: 8px; }
+.slider-arrow.next { right: 8px; }
+.slider-track {
+  display: flex; gap: 16px;
+  padding: 16px 64px 24px;
+  cursor: default;
+  user-select: none;
+  will-change: transform;
+}
+.slider-track.grabbing { transition: none !important; }
+
+.slide {
+  flex-shrink: 0;
+  width: clamp(240px, 30vw, 440px);
+  position: relative;
+}
+.slide-img {
+  aspect-ratio: 16/9;
+  overflow: hidden;
+  background: var(--bg3);
+  position: relative;
+  border: 1px solid var(--border);
+  /* thumbnail glow on hover */
+  transition: box-shadow .4s cubic-bezier(.25,.46,.45,.94);
+}
+.slide-img:hover {
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,.08),
+    0 0 28px 4px rgba(255,255,255,.07),
+    0 0 60px 12px rgba(255,255,255,.04);
+}
+.slide-img img {
+  width: 100%; height: 100%;
+  object-fit: cover; display: block; draggable: false;
+  filter: brightness(.88) saturate(.8);
+  transition: filter .45s, transform .55s cubic-bezier(.25,.46,.45,.94);
+}
+.slide:hover .slide-img img {
+  filter: brightness(1) saturate(1);
+  transform: scale(1.05);
+}
+.slide-shimmer {
+  position: absolute; inset: 0;
+  background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,.04) 50%, transparent 60%);
+  background-size: 200% 100%;
+  opacity: 0;
+  transition: opacity .3s;
+}
+.slide:hover .slide-shimmer { opacity: 1; animation: shimmer 1.2s linear; }
+@keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+
+.slide-meta {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: 10px; padding: 0 2px;
+}
+.slide-name { font-size: 12px; font-weight: 500; color: var(--off); }
+.slide-views { font-size: 11px; color: var(--muted); }
+
+.drag-label {
+  text-align: center; padding: 16px 0;
+  font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--dimmer);
+}
+
+/* ── CLIENTS ── */
+#clients { padding: 100px 56px; }
+.clients-head { margin-bottom: 60px; }
+
+.clients-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 24px;
+}
+.client-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  padding: 24px 16px 20px;
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+  transition: border-color .3s, background .3s;
+  position: relative; overflow: hidden;
+}
+.client-card::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(circle at 50% 0%, rgba(255,255,255,.04) 0%, transparent 60%);
+  opacity: 0; transition: opacity .4s;
+}
+.client-card:hover { border-color: var(--dimmer); background: var(--bg3); }
+.client-card:hover::after { opacity: 1; }
+
+.client-pfp {
+  width: 56px; height: 56px; border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--border);
+  background: var(--bg3);
+  display: block;
+  flex-shrink: 0;
+}
+.client-pfp-placeholder {
+  width: 56px; height: 56px; border-radius: 50%;
+  background: var(--bg3); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--display); font-size: 22px; color: var(--dimmer);
+  flex-shrink: 0;
+}
+.client-name {
+  font-size: 12px; font-weight: 500; color: var(--off);
+  text-align: center; line-height: 1.3;
+}
+.client-subs {
+  font-size: 10px; color: var(--muted); letter-spacing: .05em;
+}
+
+/* ── STATS ── */
+.stats-bar {
+  padding: 64px 56px;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  display: flex; justify-content: space-around; align-items: center;
+}
+.stat { text-align: center; }
+.stat-n {
+  font-family: var(--display);
+  font-size: clamp(36px, 5vw, 64px);
+  line-height: 1; color: #fff;
+  text-shadow: none;
+}
+.stat-l {
+  font-size: 10px; letter-spacing: .18em; text-transform: uppercase;
+  color: var(--muted); margin-top: 8px;
+}
+
+/* ── CONTACT ── */
+#contact { padding: 120px 56px; }
+.contact-title {
+  font-family: var(--display);
+  font-size: clamp(56px, 9vw, 130px);
+  line-height: .88; color: #fff; margin-bottom: 64px;
+  text-shadow: none;
+}
+.contact-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px;
+  background: var(--border);
+}
+.contact-cell {
+  background: var(--bg); padding: 40px 32px;
+  transition: background .3s;
+  text-decoration: none; display: block;
+  cursor: default;
+}
+.contact-cell:hover { background: var(--bg2); }
+.contact-platform { font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--accent); margin-bottom: 14px; }
+.contact-handle {
+  font-family: var(--display); font-size: clamp(20px, 3vw, 36px); color: #fff;
+}
+.contact-tip { font-size: 11px; color: var(--dimmer); margin-top: 10px; }
+
+/* ── CLIENT PFP GLOW ── */
+.client-pfp, .client-pfp-placeholder {
+  transition: box-shadow .35s;
+}
+.client-card:hover .client-pfp,
+.client-card:hover .client-pfp-placeholder {
+  box-shadow: 0 0 0 1px rgba(0,128,129,.5), 0 0 18px rgba(0,128,129,.25);
+}
+
+/* ── BEFORE / AFTER ── */
+#transformations { padding: 100px 56px; }
+.ba-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 56px; }
+
+.ba-item { position: relative; user-select: none; }
+.ba-wrap {
+  position: relative;
+  aspect-ratio: 16/9;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: var(--bg3);
+}
+.ba-before, .ba-after {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+}
+.ba-before img, .ba-after img {
+  width: 100%; height: 100%;
+  object-fit: cover; display: block;
+  pointer-events: none;
+}
+.ba-after {
+  clip-path: inset(0 50% 0 0);
+  transition: clip-path .04s linear;
+}
+.ba-divider {
+  position: absolute; top: 0; bottom: 0;
+  left: 50%; width: 2px;
+  background: var(--accent);
+  box-shadow: 0 0 12px var(--accent), 0 0 24px rgba(0,128,129,.4);
+  transform: translateX(-50%);
+  transition: left .04s linear;
+  pointer-events: none;
+}
+.ba-handle {
+  position: absolute; top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 3px rgba(0,128,129,.3), 0 0 20px rgba(0,128,129,.5);
+  display: flex; align-items: center; justify-content: center;
+  cursor: ew-resize;
+  transition: left .04s linear, box-shadow .3s;
+  z-index: 10;
+}
+.ba-handle:hover {
+  box-shadow: 0 0 0 4px rgba(0,128,129,.5), 0 0 28px rgba(0,128,129,.7);
+}
+.ba-handle svg { width: 18px; height: 18px; fill: #fff; flex-shrink: 0; }
+
+.ba-labels {
+  position: absolute; bottom: 12px; left: 0; right: 0;
+  display: flex; justify-content: space-between;
+  padding: 0 14px; pointer-events: none;
+}
+.ba-label {
+  font-size: 10px; letter-spacing: .15em; text-transform: uppercase;
+  background: rgba(0,0,0,.7); color: #fff;
+  padding: 4px 10px; backdrop-filter: blur(4px);
+}
+.ba-label.after { color: var(--accent); }
+
+.ba-caption {
+  margin-top: 12px;
+  font-size: 11px; color: var(--muted); letter-spacing: .08em; text-align: center;
+}
+
+@media (max-width: 768px) {
+  .ba-grid { grid-template-columns: 1fr; }
+  #transformations { padding: 80px 24px; }
+}
+
+/* ── FOOTER ── */
+footer {
+  padding: 40px 56px;
+  border-top: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.f-logo { font-family: var(--display); font-size: 16px; letter-spacing: .1em; color: var(--dimmer); }
+.f-copy { font-size: 11px; color: var(--dimmer); }
+.f-admin { font-size: 11px; color: var(--bg3); text-decoration: none; cursor: default; transition: color .2s; }
+.f-admin:hover { color: var(--dimmer); }
+
+/* ── REVEAL ANIMATIONS ── */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  filter: blur(5px);
+  transition: opacity .9s cubic-bezier(.22,1,.36,1),
+              transform .9s cubic-bezier(.22,1,.36,1),
+              filter .9s cubic-bezier(.22,1,.36,1);
+}
+.reveal.in { opacity: 1; transform: none; filter: blur(0); }
+.reveal-delay-1 { transition-delay: .12s; }
+.reveal-delay-2 { transition-delay: .24s; }
+.reveal-delay-3 { transition-delay: .36s; }
+
+/* ── ADMIN OVERLAY ── */
+#admin-overlay {
+  display: none; position: fixed; inset: 0; z-index: 1000;
+  background: rgba(0,0,0,.94); overflow-y: auto;
+}
+#admin-overlay.open { display: block; }
+.admin-wrap { max-width: 660px; margin: 80px auto; padding: 0 24px 100px; }
+.admin-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 48px; }
+.admin-head { font-family: var(--display); font-size: 32px; letter-spacing: .06em; color: #fff; }
+.admin-close-btn {
+  background: none; border: 1px solid var(--border); color: var(--muted);
+  padding: 8px 20px; font-size: 10px; letter-spacing: .15em; text-transform: uppercase;
+  cursor: default; font-family: var(--body); transition: all .2s;
+}
+.admin-close-btn:hover { border-color: var(--dimmer); color: #fff; }
+
+.admin-section { margin-bottom: 48px; }
+.admin-s-label {
+  font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--accent);
+  margin-bottom: 20px;
+}
+.a-form { background: var(--bg2); border: 1px solid var(--border); padding: 28px; }
+.a-row { margin-bottom: 16px; }
+.a-row label { display: block; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: 7px; }
+.a-row input {
+  width: 100%; background: var(--bg); border: 1px solid var(--border);
+  color: #fff; padding: 11px 14px; font-size: 13px; font-family: var(--body);
+  outline: none; transition: border-color .2s;
+}
+.a-row input::placeholder { color: var(--dimmer); }
+.a-row input:focus { border-color: var(--dimmer); }
+.btn-action {
+  background: #fff; color: #000; border: none; padding: 13px 28px;
+  font-size: 11px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase;
+  cursor: default; font-family: var(--body); transition: opacity .2s; margin-top: 4px;
+}
+.btn-action:hover { opacity: .85; }
+.btn-action.danger { background: transparent; color: var(--muted); border: 1px solid var(--border); margin-top: 0; }
+.btn-action.danger:hover { border-color: #fff; color: #fff; }
+
+.a-list { display: flex; flex-direction: column; gap: 6px; }
+.a-list-item { background: var(--bg2); border: 1px solid var(--border); padding: 14px 16px; display: flex; align-items: center; gap: 14px; }
+.a-thumb { width: 56px; height: 32px; object-fit: cover; background: var(--bg3); flex-shrink: 0; }
+.a-pfp-thumb { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; background: var(--bg3); flex-shrink: 0; }
+.a-info { flex: 1; min-width: 0; }
+.a-name { font-size: 12px; font-weight: 500; color: var(--off); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.a-sub  { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.a-rm { background: none; border: 1px solid var(--border); color: var(--muted); padding: 5px 12px; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; cursor: default; font-family: var(--body); transition: all .2s; flex-shrink: 0; }
+.a-rm:hover { border-color: #fff; color: #fff; }
+
+.a-login { background: var(--bg2); border: 1px solid var(--border); padding: 48px; text-align: center; }
+.a-login p { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
+.a-login input {
+  background: var(--bg); border: 1px solid var(--border); color: #fff;
+  padding: 12px 20px; font-size: 14px; font-family: var(--body);
+  outline: none; width: 260px; text-align: center; letter-spacing: .08em;
+  display: block; margin: 0 auto 8px;
+  transition: border-color .2s;
+}
+.a-login input:focus { border-color: var(--accent); }
+.a-err { font-size: 12px; color: var(--muted); margin-top: 10px; display: none; }
+
+/* ── LIGHTBOX ── */
+#lightbox { display: none; position: fixed; inset: 0; z-index: 800; background: rgba(0,0,0,.96); align-items: center; justify-content: center; }
+#lightbox.open { display: flex; }
+#lightbox img { max-width: 92vw; max-height: 92vh; object-fit: contain; }
+#lb-close { position: absolute; top: 28px; right: 28px; background: none; border: 1px solid var(--border); color: var(--muted); padding: 8px 20px; font-size: 10px; letter-spacing: .15em; text-transform: uppercase; cursor: default; font-family: var(--body); transition: all .2s; }
+#lb-close:hover { border-color: #fff; color: #fff; }
+
+/* ── PAGE LOADER ── */
+#loader {
+  position: fixed; inset: 0; z-index: 9000;
+  background: var(--bg);
+  display: flex; align-items: center; justify-content: center;
+  transition: opacity .6s cubic-bezier(.22,1,.36,1), visibility .6s;
+}
+#loader.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+.loader-text {
+  font-family: var(--display);
+  font-size: clamp(48px, 10vw, 120px);
+  letter-spacing: .12em;
+  color: #fff;
+  animation: loader-in 1s cubic-bezier(.22,1,.36,1) forwards;
+}
+.loader-text span { color: var(--accent); }
+@keyframes loader-in {
+  from { opacity: 0; letter-spacing: .4em; }
+  to   { opacity: 1; letter-spacing: .12em; }
+}
+
+/* ── SCROLL PROGRESS ── */
+#progress {
+  position: fixed; top: 0; left: 0; z-index: 9999;
+  height: 2px; width: 0%;
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent);
+  transition: width .1s linear;
+  pointer-events: none;
+}
+
+/* ── SLIDE HOVER LINK PREVIEW ── */
+.slide-link-preview {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  background: linear-gradient(to top, rgba(0,0,0,.9) 0%, transparent 100%);
+  padding: 32px 14px 12px;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity .3s, transform .3s;
+  pointer-events: none;
+  display: flex; align-items: center; gap: 8px;
+}
+.slide:hover .slide-link-preview { opacity: 1; transform: none; }
+.slide-link-icon {
+  width: 24px; height: 24px; border-radius: 50%;
+  background: var(--accent);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.slide-link-icon svg { width: 12px; height: 12px; fill: #fff; }
+.slide-link-text { font-size: 10px; color: #fff; letter-spacing: .1em; text-transform: uppercase; }
+
+/* ── ADMIN IMAGE PREVIEW ── */
+.img-preview-wrap { margin-top: 10px; display: none; }
+.img-preview-wrap img { width: 100%; aspect-ratio: 16/9; object-fit: cover; border: 1px solid var(--border); }
+.img-preview-wrap.show { display: block; }
+
+/* ── ADMIN EDIT INLINE ── */
+.a-edit-row {
+  display: none; background: var(--bg); border-top: 1px solid var(--border);
+  padding: 12px 16px; gap: 8px; flex-wrap: wrap; align-items: center;
+}
+.a-edit-row.open { display: flex; }
+.a-edit-row input {
+  flex: 1; min-width: 120px; background: var(--bg2); border: 1px solid var(--border);
+  color: #fff; padding: 7px 10px; font-size: 12px; font-family: var(--body); outline: none;
+}
+.a-edit-row input:focus { border-color: var(--accent); }
+.btn-save { background: var(--accent); color: #fff; border: none; padding: 7px 16px; font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; cursor: pointer; font-family: var(--body); }
+.btn-edit { background: none; border: 1px solid var(--border); color: var(--muted); padding: 5px 12px; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; cursor: pointer; font-family: var(--body); transition: all .2s; flex-shrink: 0; }
+.btn-edit:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ── KEYFRAMES ── */
+@keyframes up { to { opacity: 1; transform: none; } }
+@keyframes orb-drift {
+  0%   { transform: translate(0,0) scale(1); }
+  33%  { transform: translate(40px,-30px) scale(1.08); }
+  66%  { transform: translate(-20px,20px) scale(.95); }
+  100% { transform: translate(0,0) scale(1); }
+}
+@keyframes glow-pulse {
+  0%, 100% { text-shadow: 0 0 20px rgba(255,255,255,.18), 0 0 60px rgba(255,255,255,.06); }
+  50%       { text-shadow: 0 0 30px rgba(255,255,255,.28), 0 0 80px rgba(255,255,255,.10); }
+}
+@keyframes line-in {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+@keyframes float-up-blur {
+  from { opacity:0; transform: translateY(36px); filter: blur(6px); }
+  to   { opacity:1; transform: translateY(0);    filter: blur(0); }
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  nav, #home, #work .work-head, #clients, #contact, footer { padding-left: 24px; padding-right: 24px; }
+  .hero-scroll { display: none; }
+  .slider-track { padding: 8px 24px 16px; }
+  .stats-bar { flex-direction: column; gap: 32px; padding: 48px 24px; }
+  .contact-grid { grid-template-columns: 1fr; }
+  .clients-grid { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); }
+  .work-head { flex-direction: column; align-items: flex-start; gap: 8px; }
+}
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+</style>
+</head>
+<body>
+
+<!-- PROGRESS -->
+<div id="progress"></div>
+<!-- CURSOR -->
+<!-- NAV -->
+<nav>
+  <a class="nav-logo" href="#home">VADER</a>
+  <ul class="nav-links">
+    <li><a href="#work">Work</a></li>
+    <li><a href="#transformations">Before & After</a></li>
+    <li><a href="#clients">Clients</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section id="home">
+  <div class="hero-noise"></div>
+  <div class="hero-orb"></div>
+  <div class="hero-orb-2"></div>
+  <div class="hero-content">
+    <div class="hero-tag">YouTube Thumbnail Studio</div>
+    <h1 class="hero-h1">Thumbnails<br>that<br><em>get clicked.</em></h1>
+    <div class="hero-row">
+      <p class="hero-desc">High-CTR thumbnails that stop the scroll. Simple process. Fast delivery. Results that speak.</p>
+      <div class="hero-counter">
+        <div class="counter-num"><span id="c-num">0</span>B+</div>
+        <div class="counter-label">Views Generated</div>
+      </div>
+    </div>
+    <div class="hero-ctas">
+      <a href="#work" class="btn btn-white">See Work</a>
+      <a href="#contact" class="btn btn-outline">Get in Touch</a>
+    </div>
+  </div>
+  <div class="hero-scroll">Scroll</div>
+</section>
+
+<!-- WORK SLIDER -->
+<section id="work">
+  <div class="work-head reveal">
+    <div>
+      <p class="s-label">Selected Work</p>
+      <h2 class="s-title">Recent<br>Thumbnails</h2>
+    </div>
+    <div class="work-count" id="wc-display">00</div>
+  </div>
+  <div class="slider-outer">
+    <button class="slider-arrow prev" onclick="slideBy(-1)" aria-label="Previous">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <div class="slider-track" id="sliderTrack"></div>
+    <button class="slider-arrow next" onclick="slideBy(1)" aria-label="Next">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+  </div>
+  <p class="drag-label">← drag to explore →</p>
+</section>
+
+<!-- BEFORE / AFTER -->
+<section id="transformations">
+  <div class="divider" style="margin-bottom:100px"></div>
+  <div class="reveal">
+    <p class="s-label">The Difference</p>
+    <h2 class="s-title">Before &amp; After</h2>
+  </div>
+  <div class="ba-grid reveal reveal-delay-1" id="baGrid">
+    <p style="color:#333;font-size:13px;padding:24px 0">Loading...</p>
+  </div>
+</section>
+
+<!-- CLIENTS -->
+<section id="clients">
+  <div class="divider" style="margin-bottom:100px"></div>
+  <div class="clients-head reveal">
+    <p class="s-label">Creators</p>
+    <h2 class="s-title">Clients</h2>
+  </div>
+  <div class="clients-grid" id="clientsGrid"></div>
+</section>
+
+<!-- STATS -->
+<div class="stats-bar reveal" style="margin-top:100px">
+  <div class="stat"><div class="stat-n">1B+</div><div class="stat-l">Views Generated</div></div>
+  <div class="stat"><div class="stat-n">1000+</div><div class="stat-l">Thumbnails Created</div></div>
+  <div class="stat"><div class="stat-n">48hr</div><div class="stat-l">Avg Turnaround</div></div>
+</div>
+
+<!-- CONTACT -->
+<section id="contact">
+  <h2 class="contact-title reveal">Let's<br>make it<br><em>click.</em></h2>
+  <div class="contact-grid reveal reveal-delay-1">
+    <div class="contact-cell" onclick="copyIt('vaderzs', this, '.contact-tip')">
+      <div class="contact-platform">Discord</div>
+      <div class="contact-handle">vaderzs</div>
+      <div class="contact-tip">Click to copy</div>
+    </div>
+    <div class="contact-cell" onclick="copyIt('hello@vader.studio', this, '.contact-tip')">
+      <div class="contact-platform">Email</div>
+      <div class="contact-handle" style="font-size:clamp(16px,2.4vw,28px)">hello@vader.studio</div>
+      <div class="contact-tip">Click to copy</div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="f-logo">VADER</div>
+  <div class="f-copy">© 2026 Vader Studio</div>
+  <a class="f-admin" onclick="openAdmin()">admin</a>
+</footer>
+
+<!-- LIGHTBOX -->
+<div id="lightbox">
+  <button id="lb-close" onclick="closeLB()">Close</button>
+  <img id="lb-img" src="" alt="">
+</div>
+
+<!-- ADMIN -->
+<div id="admin-overlay">
+  <div class="admin-wrap">
+    <div class="admin-top">
+      <div class="admin-head">ADMIN</div>
+      <button class="admin-close-btn" onclick="closeAdmin()">× Close</button>
+    </div>
+
+    <!-- Login -->
+    <div id="a-login">
+      <div class="a-login">
+        <p>Sign in to manage content</p>
+        <input type="email" id="a-email" placeholder="your@email.com" style="margin-bottom:8px" onkeydown="if(event.key==='Enter')tryLogin()">
+        <input type="password" id="a-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')tryLogin()">
+        <br><button class="btn-action" style="margin-top:16px" onclick="tryLogin()">Unlock</button>
+        <p class="a-err" id="a-err">Wrong email or password</p>
+      </div>
+    </div>
+
+    <!-- Manage -->
+    <div id="a-manage" style="display:none">
+
+      <!-- Add Work -->
+      <div class="admin-section">
+        <p class="admin-s-label">Add Thumbnail</p>
+        <div class="a-form">
+          <div class="a-row"><label>Title / Channel</label><input id="w-title" type="text" placeholder="MrBeast – $1M Challenge"></div>
+          <div class="a-row"><label>Image URL</label><input id="w-img" type="text" placeholder="https://..." oninput="previewImg('w-img','w-img-preview')"></div>
+          <div class="img-preview-wrap" id="w-img-preview"><img id="w-img-preview-img" src="" alt="Preview"></div>
+          <div class="a-row"><label>Views</label><input id="w-views" type="text" placeholder="22M views"></div>
+          <div class="a-row"><label>YouTube Link (optional)</label><input id="w-link" type="text" placeholder="https://youtube.com/watch?v=..."></div>
+          <button class="btn-action" onclick="addWork()">+ Add to Portfolio</button>
+        </div>
+      </div>
+
+      <!-- Work List -->
+      <div class="admin-section">
+        <p class="admin-s-label">Thumbnails (<span id="a-wcount">0</span>)</p>
+        <div class="a-list" id="a-wlist"></div>
+      </div>
+
+      <!-- Add Client -->
+      <div class="admin-section">
+        <p class="admin-s-label">Add Client</p>
+        <div class="a-form">
+          <div class="a-row"><label>Channel / Creator Name</label><input id="cl-name" type="text" placeholder="MrBeast"></div>
+          <div class="a-row"><label>Profile Image URL</label><input id="cl-pfp" type="text" placeholder="https://..." oninput="previewImg('cl-pfp','cl-pfp-preview')"></div>
+          <div class="img-preview-wrap" id="cl-pfp-preview"><img id="cl-pfp-preview-img" src="" alt="Preview" style="aspect-ratio:1;border-radius:50%;width:64px;height:64px;object-fit:cover"></div>
+          <div class="a-row"><label>Subscribers (optional)</label><input id="cl-subs" type="text" placeholder="200M subs"></div>
+          <button class="btn-action" onclick="addClient()">+ Add Client</button>
+        </div>
+      </div>
+
+      <!-- Client List -->
+      <div class="admin-section">
+        <p class="admin-s-label">Clients (<span id="a-clcount">0</span>)</p>
+        <div class="a-list" id="a-cllist"></div>
+      </div>
+
+      <!-- Add Before/After -->
+      <div class="admin-section">
+        <p class="admin-s-label">Add Before &amp; After</p>
+        <div class="a-form">
+          <div class="a-row"><label>Title (optional)</label><input id="ba-title" type="text" placeholder="Jynxzi Thumbnail"></div>
+          <div class="a-row"><label>Before Image URL</label><input id="ba-before" type="text" placeholder="https://..."></div>
+          <div class="a-row"><label>After Image URL</label><input id="ba-after-url" type="text" placeholder="https://..."></div>
+          <button class="btn-action" onclick="addBA()">+ Add Before &amp; After</button>
+        </div>
+      </div>
+
+      <!-- Before/After List -->
+      <div class="admin-section">
+        <p class="admin-s-label">Before &amp; After (<span id="a-bacount">0</span>)</p>
+        <div class="a-list" id="a-balist"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+/* ─── SUPABASE CONFIG ─── */
+const SUPA_URL  = 'https://jpgfidqqklulafnllrzq.supabase.co';
+const SUPA_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpwZ2ZpZHFxa2x1bGFmbmxscnpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0MjIzNjUsImV4cCI6MjA5Nzk5ODM2NX0.-RwUc0mrBb7KuH85_m_tIcy-Hi20lkGT9_XhyEVzFLI';
+
+let authToken = null; // set on login
+
+const db = {
+  async get(table) {
+    const r = await fetch(`${SUPA_URL}/rest/v1/${table}?order=id.desc`, {
+      headers: { apikey: SUPA_KEY, Authorization: `Bearer ${SUPA_KEY}` }
+    });
+    return r.ok ? r.json() : [];
+  },
+  async insert(table, row) {
+    const r = await fetch(`${SUPA_URL}/rest/v1/${table}`, {
+      method: 'POST',
+      headers: { apikey: SUPA_KEY, Authorization: `Bearer ${authToken}`, 'Content-Type': 'application/json', Prefer: 'return=representation' },
+      body: JSON.stringify(row)
+    });
+    return r.ok ? r.json() : null;
+  },
+  async remove(table, id) {
+    await fetch(`${SUPA_URL}/rest/v1/${table}?id=eq.${id}`, {
+      method: 'DELETE',
+      headers: { apikey: SUPA_KEY, Authorization: `Bearer ${authToken}` }
+    });
+  },
+  async patch(table, id, data) {
+    const r = await fetch(`${SUPA_URL}/rest/v1/${table}?id=eq.${id}`, {
+      method: 'PATCH',
+      headers: { apikey: SUPA_KEY, Authorization: `Bearer ${authToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    return r.ok;
+  }
+};
+
+let work = [], clients = [];
+
+/* ─── SLIDER ─── */
+function renderSlider() {
+  const track = document.getElementById('sliderTrack');
+  document.getElementById('wc-display').textContent = String(work.length).padStart(2,'0');
+  track.innerHTML = work.length ? work.map(w => `
+    <div class="slide" onclick="openLB('${w.img.replace(/'/g,"\\'")}')">
+      <div class="slide-img">
+        <img src="${w.img}" alt="${w.title}" draggable="false" loading="lazy">
+        <div class="slide-shimmer"></div>
+      </div>
+      <div class="slide-meta">
+        <span class="slide-name">${w.title}</span>
+        <span class="slide-views">${w.views||''}</span>
+      </div>
+    </div>`).join('')
+  : '<p style="color:#333;font-size:13px;padding:24px 0">No work added yet.</p>';
+}
+
+function initSlider() {
+  const track = document.getElementById('sliderTrack');
+  let drag=false, sx=0, sl=0;
+  track.addEventListener('mousedown', e => { drag=true; track.classList.add('grabbing'); sx=e.pageX; sl=track._x||0; });
+  document.addEventListener('mouseup', () => { drag=false; track.classList.remove('grabbing'); });
+  document.addEventListener('mousemove', e => {
+    if (!drag) return; e.preventDefault();
+    const max = -(track.scrollWidth - track.clientWidth - 112);
+    track._x = Math.max(max, Math.min(0, sl + (e.pageX-sx)*1.3));
+    track.style.transform = `translateX(${track._x}px)`;
+  });
+  track.addEventListener('touchstart', e => { sx=e.touches[0].pageX; sl=track._x||0; },{passive:true});
+  track.addEventListener('touchmove', e => {
+    const max = -(track.scrollWidth - track.clientWidth - 48);
+    track._x = Math.max(max, Math.min(0, sl + (e.touches[0].pageX-sx)*1.2));
+    track.style.transform = `translateX(${track._x}px)`;
+  },{passive:true});
+}
+
+/* ─── CLIENTS ─── */
+function renderClients() {
+  const grid = document.getElementById('clientsGrid');
+  if (!clients.length) { grid.innerHTML = '<p style="color:#333;font-size:13px">No clients added yet.</p>'; return; }
+  grid.innerHTML = clients.map(c => `
+    <div class="client-card">
+      ${c.pfp
+        ? `<img class="client-pfp" src="${c.pfp}" alt="${c.name}" loading="lazy">`
+        : `<div class="client-pfp-placeholder">${c.name.charAt(0).toUpperCase()}</div>`}
+      <div class="client-name">${c.name}</div>
+      ${c.subs ? `<div class="client-subs">${c.subs}</div>` : ''}
+    </div>`).join('');
+}
+
+/* ─── SCROLL PROGRESS ─── */
+window.addEventListener('scroll', () => {
+  const el = document.documentElement;
+  const pct = (el.scrollTop / (el.scrollHeight - el.clientHeight)) * 100;
+  document.getElementById('progress').style.width = pct + '%';
+  document.querySelector('nav').classList.toggle('scrolled', window.scrollY > 60);
+});
+
+/* ─── IMAGE PREVIEW ─── */
+function previewImg(inputId, wrapId) {
+  const url = document.getElementById(inputId).value.trim();
+  const wrap = document.getElementById(wrapId);
+  const img  = wrap.querySelector('img');
+  if (url) { img.src = url; wrap.classList.add('show'); }
+  else { wrap.classList.remove('show'); }
+}
+
+/* ─── NAV SCROLL (merged above) ─── */
+
+/* ─── SLIDER ARROWS ─── */
+function slideBy(dir) {
+  const track = document.getElementById('sliderTrack');
+  const slideW = track.querySelector('.slide') ? track.querySelector('.slide').offsetWidth + 16 : 320;
+  const max = -(track.scrollWidth - track.clientWidth - 112);
+  track._x = Math.max(max, Math.min(0, (track._x || 0) + (-dir * slideW * 2)));
+  track.style.transition = 'transform .5s cubic-bezier(.25,.46,.45,.94)';
+  track.style.transform = `translateX(${track._x}px)`;
+  setTimeout(() => track.style.transition = '', 500);
+}
+
+/* ─── COUNTER ─── */
+setTimeout(() => {
+  const el = document.getElementById('c-num');
+  let v=0; const iv = setInterval(() => { v+=.05; el.textContent=v.toFixed(1); if(v>=1){el.textContent='1';clearInterval(iv);} },18);
+}, 600);
+
+/* ─── SCROLL REVEAL ─── */
+const ro = new IntersectionObserver(entries => {
+  entries.forEach(e => { if(e.isIntersecting){ e.target.classList.add('in'); ro.unobserve(e.target); }});
+}, {threshold:.1});
+document.querySelectorAll('.reveal').forEach(el => ro.observe(el));
+
+/* ─── LIGHTBOX ─── */
+function openLB(src) { document.getElementById('lb-img').src=src; document.getElementById('lightbox').classList.add('open'); }
+function closeLB()   { document.getElementById('lightbox').classList.remove('open'); }
+document.getElementById('lightbox').addEventListener('click', e => { if(e.target.id==='lightbox') closeLB(); });
+
+/* ─── COPY ─── */
+function copyIt(text, el, tipSel) {
+  navigator.clipboard.writeText(text).catch(()=>{});
+  const tip = el.querySelector(tipSel);
+  if (!tip) return; const orig = tip.textContent;
+  tip.textContent = 'Copied!'; setTimeout(() => tip.textContent=orig, 1800);
+}
+
+/* ─── ADMIN ─── */
+let unlocked = false;
+function openAdmin()  { document.getElementById('admin-overlay').classList.add('open'); if(unlocked) showManage(); }
+function closeAdmin() { document.getElementById('admin-overlay').classList.remove('open'); }
+document.getElementById('admin-overlay').addEventListener('click', e => { if(e.target===document.getElementById('admin-overlay')) closeAdmin(); });
+
+async function tryLogin() {
+  const email = document.getElementById('a-email').value.trim();
+  const pass  = document.getElementById('a-pass').value;
+  document.getElementById('a-err').style.display = 'none';
+  const r = await fetch(`${SUPA_URL}/auth/v1/token?grant_type=password`, {
+    method: 'POST',
+    headers: { apikey: SUPA_KEY, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password: pass })
+  });
+  const data = await r.json();
+  if (data.access_token) {
+    authToken = data.access_token;
+    unlocked = true;
+    showManage();
+  } else {
+    document.getElementById('a-err').style.display = 'block';
+    document.getElementById('a-pass').value = '';
+  }
+}
+function showManage() {
+  document.getElementById('a-login').style.display='none';
+  document.getElementById('a-manage').style.display='block';
+  renderAWork(); renderAClients(); renderABA();
+}
+
+async function addWork() {
+  const t=document.getElementById('w-title').value.trim();
+  const i=document.getElementById('w-img').value.trim();
+  if(!t||!i){alert('Title and image URL required.');return;}
+  const row = {title:t, img:i, views:document.getElementById('w-views').value.trim(), link:document.getElementById('w-link').value.trim()};
+  const res = await db.insert('Work', row);
+  if(res) { work.unshift(res[0]||{...row,id:Date.now()}); renderSlider(); renderAWork(); ['w-title','w-img','w-views','w-link'].forEach(id=>document.getElementById(id).value=''); document.getElementById('w-img-preview').classList.remove('show'); }
+  else alert('Error saving — check Supabase RLS policies (disable RLS on Work table).');
+}
+async function removeWork(id) {
+  await db.remove('Work', id);
+  work = work.filter(w=>w.id!==id); renderSlider(); renderAWork();
+}
+async function saveWorkEdit(id) {
+  const title = document.getElementById(`edit-title-${id}`).value.trim();
+  const views = document.getElementById(`edit-views-${id}`).value.trim();
+  const ok = await db.patch('Work', id, { title, views });
+  if (ok) {
+    const w = work.find(w=>w.id===id);
+    if(w){ w.title=title; w.views=views; }
+    renderSlider(); renderAWork();
+  } else alert('Save failed — check you are logged in.');
+}
+function toggleEdit(id) {
+  const row = document.getElementById(`edit-row-${id}`);
+  row.classList.toggle('open');
+}
+function renderAWork() {
+  document.getElementById('a-wcount').textContent=work.length;
+  document.getElementById('a-wlist').innerHTML = work.map(w=>`
+    <div class="a-list-item" style="flex-direction:column;padding:0;gap:0">
+      <div style="display:flex;align-items:center;gap:14px;padding:14px 16px">
+        <img class="a-thumb" src="${w.img}" alt="">
+        <div class="a-info"><div class="a-name">${w.title}</div><div class="a-sub">${w.views||''}</div></div>
+        <button class="btn-edit" onclick="toggleEdit(${w.id})">Edit</button>
+        <button class="a-rm" onclick="removeWork(${w.id})">Remove</button>
+      </div>
+      <div class="a-edit-row" id="edit-row-${w.id}">
+        <input id="edit-title-${w.id}" type="text" value="${w.title}" placeholder="Title">
+        <input id="edit-views-${w.id}" type="text" value="${w.views||''}" placeholder="Views (e.g. 22M views)" style="max-width:160px">
+        <button class="btn-save" onclick="saveWorkEdit(${w.id})">Save</button>
+      </div>
+    </div>`).join('') || '<p style="color:#333;font-size:12px">None yet.</p>';
+}
+
+async function addClient() {
+  const n=document.getElementById('cl-name').value.trim();
+  if(!n){alert('Name required.');return;}
+  const row = {name:n, pfp:document.getElementById('cl-pfp').value.trim(), subs:document.getElementById('cl-subs').value.trim()};
+  const res = await db.insert('Clients', row);
+  if(res) { clients.push(res[0]||{...row,id:Date.now()}); renderClients(); renderAClients(); ['cl-name','cl-pfp','cl-subs'].forEach(id=>document.getElementById(id).value=''); }
+  else alert('Error saving — check Supabase RLS policies (disable RLS on Clients table).');
+}
+async function removeClient(id) {
+  await db.remove('Clients', id);
+  clients = clients.filter(c=>c.id!==id); renderClients(); renderAClients();
+}
+function renderAClients() {
+  document.getElementById('a-clcount').textContent=clients.length;
+  document.getElementById('a-cllist').innerHTML = clients.map(c=>`
+    <div class="a-list-item">
+      ${c.pfp?`<img class="a-pfp-thumb" src="${c.pfp}" alt="">`:`<div class="a-pfp-thumb" style="display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:16px;color:#444">${c.name.charAt(0)}</div>`}
+      <div class="a-info"><div class="a-name">${c.name}</div>${c.subs?`<div class="a-sub">${c.subs}</div>`:''}</div>
+      <button class="a-rm" onclick="removeClient(${c.id})">Remove</button>
+    </div>`).join('') || '<p style="color:#333;font-size:12px">None yet.</p>';
+}
+
+/* ─── BEFORE / AFTER ─── */
+let baItems = [];
+
+function renderBA() {
+  const grid = document.getElementById('baGrid');
+  if (!baItems.length) {
+    grid.innerHTML = '<p style="color:#333;font-size:13px;padding:24px 0">No before & after added yet.</p>';
+    return;
+  }
+  grid.innerHTML = baItems.map((item, i) => `
+    <div class="ba-item">
+      <div class="ba-wrap" id="baw${item.id}">
+        <div class="ba-before"><img src="${item.before_img}" alt="Before" draggable="false" loading="lazy"></div>
+        <div class="ba-after" id="baa${item.id}"><img src="${item.after_img}" alt="After" draggable="false" loading="lazy"></div>
+        <div class="ba-divider" id="bad${item.id}"></div>
+        <div class="ba-handle" id="bah${item.id}">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8 5l-7 7 7 7V5zm8 0v14l7-7-7-7z"/></svg>
+        </div>
+        <div class="ba-labels">
+          <span class="ba-label before">Before</span>
+          <span class="ba-label after">After</span>
+        </div>
+      </div>
+      <p class="ba-caption">${item.title || 'Drag to compare'}</p>
+    </div>`).join('');
+
+  // init each slider after render
+  baItems.forEach(item => {
+    initBA('baw'+item.id, 'baa'+item.id, 'bad'+item.id, 'bah'+item.id);
+  });
+
+  // re-observe reveals
+  document.querySelectorAll('.ba-item').forEach((el, i) => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(28px)';
+    el.style.filter = 'blur(5px)';
+    el.style.transition = `opacity .9s cubic-bezier(.22,1,.36,1) ${i * .12}s, transform .9s cubic-bezier(.22,1,.36,1) ${i * .12}s, filter .9s cubic-bezier(.22,1,.36,1) ${i * .12}s`;
+    setTimeout(() => {
+      el.style.opacity = '1';
+      el.style.transform = 'none';
+      el.style.filter = 'blur(0)';
+    }, 100);
+  });
+}
+
+function initBA(wrapId, afterId, divId, handleId) {
+  const wrap   = document.getElementById(wrapId);
+  const after  = document.getElementById(afterId);
+  const divEl  = document.getElementById(divId);
+  const handle = document.getElementById(handleId);
+  if (!wrap || !after || !divEl || !handle) return;
+  let dragging = false;
+
+  function setPos(pct) {
+    pct = Math.max(2, Math.min(98, pct));
+    after.style.clipPath = `inset(0 ${100 - pct}% 0 0)`;
+    divEl.style.left     = pct + '%';
+    handle.style.left    = pct + '%';
+  }
+
+  function onMove(clientX) {
+    const rect = wrap.getBoundingClientRect();
+    setPos(((clientX - rect.left) / rect.width) * 100);
+  }
+
+  handle.addEventListener('mousedown',   e => { dragging = true; e.preventDefault(); });
+  document.addEventListener('mouseup',   () => dragging = false);
+  document.addEventListener('mousemove', e => { if (dragging) onMove(e.clientX); });
+  handle.addEventListener('touchstart',  () => { dragging = true; }, { passive: true });
+  document.addEventListener('touchend',  () => dragging = false);
+  document.addEventListener('touchmove', e => { if (dragging) onMove(e.touches[0].clientX); }, { passive: true });
+
+  // intro animation
+  const obs = new IntersectionObserver(entries => {
+    if (entries[0].isIntersecting) {
+      let p = 50, dir = -1, steps = 0;
+      const iv = setInterval(() => {
+        p += dir * 1.2; setPos(p); steps++;
+        if (p <= 20) dir = 1;
+        if (p >= 50 && steps > 40) { clearInterval(iv); setPos(50); }
+      }, 16);
+      obs.disconnect();
+    }
+  }, { threshold: .4 });
+  obs.observe(wrap);
+}
+
+async function addBA() {
+  const before = document.getElementById('ba-before').value.trim();
+  const after  = document.getElementById('ba-after-url').value.trim();
+  if (!before || !after) { alert('Both image URLs required.'); return; }
+  const row = { title: document.getElementById('ba-title').value.trim(), before_img: before, after_img: after };
+  const res = await db.insert('BeforeAfter', row);
+  if (res) {
+    baItems.unshift(res[0] || { ...row, id: Date.now() });
+    renderBA(); renderABA();
+    ['ba-title','ba-before','ba-after-url'].forEach(id => document.getElementById(id).value = '');
+  } else alert('Error — check Supabase RLS on BeforeAfter table.');
+}
+
+async function removeBA(id) {
+  await db.remove('BeforeAfter', id);
+  baItems = baItems.filter(b => b.id !== id);
+  renderBA(); renderABA();
+}
+
+function renderABA() {
+  document.getElementById('a-bacount').textContent = baItems.length;
+  document.getElementById('a-balist').innerHTML = baItems.map(b => `
+    <div class="a-list-item">
+      <img class="a-thumb" src="${b.before_img}" alt="">
+      <div class="a-info"><div class="a-name">${b.title || 'Before & After'}</div><div class="a-sub">→ ${b.after_img.slice(0,40)}...</div></div>
+      <button class="a-rm" onclick="removeBA(${b.id})">Remove</button>
+    </div>`).join('') || '<p style="color:#333;font-size:12px">None yet.</p>';
+}
+
+/* ─── INIT — load from Supabase ─── */
+async function init() {
+  work    = await db.get('Work');
+  clients = await db.get('Clients');
+  baItems = await db.get('BeforeAfter');
+  renderSlider(); renderClients(); initSlider(); renderBA();
+}
+init();
+</script>
+</body>
+</html>
