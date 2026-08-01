@@ -896,6 +896,8 @@ footer {
 const SUPA_URL  = 'https://jpgfidqqklulafnllrzq.supabase.co';
 const SUPA_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpwZ2ZpZHFxa2x1bGFmbmxscnpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0MjIzNjUsImV4cCI6MjA5Nzk5ODM2NX0.-RwUc0mrBb7KuH85_m_tIcy-Hi20lkGT9_XhyEVzFLI';
 
+let authToken = null; // set on login
+
 const db = {
   async get(table) {
     const r = await fetch(`${SUPA_URL}/rest/v1/${table}?order=id.desc`, {
@@ -906,7 +908,7 @@ const db = {
   async insert(table, row) {
     const r = await fetch(`${SUPA_URL}/rest/v1/${table}`, {
       method: 'POST',
-      headers: { apikey: SUPA_KEY, Authorization: `Bearer ${SUPA_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=representation' },
+      headers: { apikey: SUPA_KEY, Authorization: `Bearer ${authToken}`, 'Content-Type': 'application/json', Prefer: 'return=representation' },
       body: JSON.stringify(row)
     });
     return r.ok ? r.json() : null;
@@ -914,8 +916,16 @@ const db = {
   async remove(table, id) {
     await fetch(`${SUPA_URL}/rest/v1/${table}?id=eq.${id}`, {
       method: 'DELETE',
-      headers: { apikey: SUPA_KEY, Authorization: `Bearer ${SUPA_KEY}` }
+      headers: { apikey: SUPA_KEY, Authorization: `Bearer ${authToken}` }
     });
+  },
+  async patch(table, id, data) {
+    const r = await fetch(`${SUPA_URL}/rest/v1/${table}?id=eq.${id}`, {
+      method: 'PATCH',
+      headers: { apikey: SUPA_KEY, Authorization: `Bearer ${authToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    return r.ok;
   }
 };
 
@@ -1044,6 +1054,7 @@ async function tryLogin() {
   });
   const data = await r.json();
   if (data.access_token) {
+    authToken = data.access_token;
     unlocked = true;
     showManage();
   } else {
@@ -1073,16 +1084,12 @@ async function removeWork(id) {
 async function saveWorkEdit(id) {
   const title = document.getElementById(`edit-title-${id}`).value.trim();
   const views = document.getElementById(`edit-views-${id}`).value.trim();
-  const r = await fetch(`${SUPA_URL}/rest/v1/Work?id=eq.${id}`, {
-    method: 'PATCH',
-    headers: { apikey: SUPA_KEY, Authorization: `Bearer ${SUPA_KEY}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ title, views })
-  });
-  if (r.ok) {
+  const ok = await db.patch('Work', id, { title, views });
+  if (ok) {
     const w = work.find(w=>w.id===id);
     if(w){ w.title=title; w.views=views; }
     renderSlider(); renderAWork();
-  }
+  } else alert('Save failed — check you are logged in.');
 }
 function toggleEdit(id) {
   const row = document.getElementById(`edit-row-${id}`);
